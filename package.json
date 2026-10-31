@@ -10,5 +10,5 @@
     "test:physics": "python3 -m unittest -v test_model test_cosmology",
     "test:ui": "node tests/browser.cjs"
   },
-  "devDependencies": {"katex": "0.16.22", "playwright": "1.56.1"}
+  "devDependencies": {"katex": "0.18.2", "playwright": "1.56.1"}
 }
