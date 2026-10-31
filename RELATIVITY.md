@@ -4,11 +4,15 @@ This experiment stress-tests the tunnel metaphor using Lorentz boosts in flat sp
 
 Let $T=ct/L$, $X=x/L$, $\beta=v/c$ and $\Gamma=(1-\beta^2)^{-1/2}$. The frame moving in the positive x direction assigns coordinates
 
-$$T'=\Gamma(T-\beta X),\qquad X'=\Gamma(X-\beta T).$$
+$$
+T'=\Gamma(T-\beta X),\qquad X'=\Gamma(X-\beta T).
+$$
 
 A line of constant $T'$ therefore has $T=\beta X+T'/\Gamma$. The moving observer's worldline is $X=\beta T$. Along it, $T'=T/\Gamma$, so $d\tau/dt=1/\Gamma$. Equal scales on T and X put light rays at 45 degrees. Every boost preserves
 
-$$-T'^2+X'^2=-T^2+X^2.$$
+$$
+-T'^2+X'^2=-T^2+X^2.
+$$
 
 Events A=(0,-1), B=(0,+1) have spacelike separation. At beta=0.6, Gamma=1.25, so T'_A=+0.75 and T'_B=-0.75. Reversing beta reverses their assigned order. Neither event can causally influence the other. This does not imply that causally connected events can exchange order under an ordinary Lorentz boost.
 
