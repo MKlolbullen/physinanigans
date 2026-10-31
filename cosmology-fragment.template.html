@@ -1,0 +1,125 @@
+<div id="expanding-tunnel-lab">
+  <style>
+    #expanding-tunnel-lab .cosmo-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 24px;margin-bottom:14px}
+    #expanding-tunnel-lab .cosmo-fields label {min-width:0}
+    #expanding-tunnel-lab .cosmo-number {float:right;font-variant-numeric:tabular-nums}
+    #expanding-tunnel-lab .cosmo-status,#expanding-tunnel-lab .cosmo-stats {display:flex;flex-wrap:wrap;gap:8px 20px;margin:12px 0}
+    #expanding-tunnel-lab .cosmo-diagram {display:block;width:100%}
+    #expanding-tunnel-lab .cosmo-diagram text {font-family:inherit;font-size:12px;fill:var(--foreground);font-weight:400}
+    #expanding-tunnel-lab .cosmo-bar {height:9px;display:flex;background:var(--muted);margin-top:6px}
+    #expanding-tunnel-lab .cosmo-key {display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:8px}
+    #expanding-tunnel-lab .cosmo-key span {display:inline-flex;align-items:center;gap:5px}
+    #expanding-tunnel-lab .cosmo-swatch {display:inline-block;width:8px;height:8px;border-radius:50%}
+    #expanding-tunnel-lab [hidden] {display:none!important}
+    @media(max-width:420px){#expanding-tunnel-lab .cosmo-fields{grid-template-columns:1fr}}
+  </style>
+  <h3>An evolving universe</h3>
+  <div class="cosmo-fields">
+    <label class="form-label" for="ct-preset">Universe ingredients
+      <select class="form-select" id="ct-preset">
+        <option value="mixed">Matter + radiation + Λ</option>
+        <option value="matter">Matter only · flat</option>
+        <option value="radiation">Radiation only · flat</option>
+        <option value="closed">Closed universe · recollapse</option>
+        <option value="vacuum">Cosmological constant only · flat</option>
+        <option value="empty">Empty universe · open</option>
+        <option value="custom" disabled>Custom ingredients</option>
+      </select>
+    </label>
+    <label class="form-label" for="ct-matter">Matter Ωₘ <output class="cosmo-number" id="ct-m-value">0.30</output>
+      <input class="form-range" id="ct-matter" type="range" min="0" max="2" step="0.01" value="0.3">
+    </label>
+    <label class="form-label" for="ct-radiation">Radiation Ωᵣ <output class="cosmo-number" id="ct-r-value">0.0001</output>
+      <input class="form-range" id="ct-radiation" type="range" min="0" max="1" step="0.0001" value="0.0001">
+    </label>
+    <label class="form-label" for="ct-lambda">Cosmological constant ΩΛ <output class="cosmo-number" id="ct-l-value">0.6999</output>
+      <input class="form-range" id="ct-lambda" type="range" min="0" max="1" step="0.0001" value="0.6999">
+    </label>
+  </div>
+  <label class="form-label" for="ct-time">Cosmic time slice <output class="cosmo-number" id="ct-time-value"></output></label>
+  <input class="form-range" id="ct-time" type="range" min="0" max="1000" step="1" value="500">
+  <div class="cosmo-status text-small"><span id="ct-phase"></span><span id="ct-curvature"></span></div>
+  <div id="ct-error" role="alert" hidden></div>
+  <p class="drag-hint">↔ Drag across the tunnel to choose a slice. The slider also works with arrow keys.</p>
+  <svg class="cosmo-diagram" id="ct-diagram" role="img" aria-labelledby="ct-title ct-desc"></svg>
+  <div class="cosmo-stats tabular-nums" id="ct-stats" aria-live="polite" aria-atomic="true"></div>
+  <div class="text-small">Energy-density shares at this slice</div>
+  <div class="cosmo-bar" role="img" id="ct-composition" aria-label="Energy-density composition"></div>
+  <div class="cosmo-key text-small" id="ct-legend"></div>
+  <script>
+  (()=>{
+    /*__COSMOLOGY__*/
+/*__DRAG__*/
+    const root=document.getElementById('expanding-tunnel-lab'),el=id=>root.querySelector('#'+id),svg=el('ct-diagram');
+    let run;
+    const colors=['var(--viz-series-1)','var(--viz-series-2)','var(--viz-series-3)'];
+    const format=(x,n=3)=>Math.abs(x)<1e-12?'0':x.toFixed(n);
+    const node=(tag,attrs={},text='')=>{
+      const n=document.createElementNS('http://www.w3.org/2000/svg',tag);
+      Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));if(text)n.textContent=text;svg.appendChild(n);return n;
+    };
+    function rebuild(){
+      try {
+        run=TunnelCosmology.simulate({m:+el('ct-matter').value,r:+el('ct-radiation').value,l:+el('ct-lambda').value});
+        el('ct-error').hidden=true;el('ct-time').disabled=false;draw();
+      }catch(error){el('ct-error').textContent=error.message;el('ct-error').hidden=false;el('ct-time').disabled=true;run=null;svg.replaceChildren();el('ct-stats').replaceChildren();}
+    }
+    function draw(){
+      if(!run)return;
+      const t=run.end*(+el('ct-time').value)/1000,s=TunnelCosmology.sample(run,t);
+      root.dataset.state=JSON.stringify(s);root.dataset.end=String(run.end);
+      el('ct-m-value').textContent=format(run.p.m,2);el('ct-r-value').textContent=format(run.p.r,4);el('ct-l-value').textContent=format(run.p.l,4);
+      el('ct-time-value').textContent='u = '+format(t);
+      el('ct-phase').textContent=Math.abs(s.v)<1e-5?'Turning around':s.v<0?'Contracting':s.acceleration>0?'Expanding · accelerating':'Expanding · decelerating';
+      el('ct-curvature').textContent='Curvature Ωₖ = '+format(run.p.k);
+      el('ct-stats').replaceChildren();
+      for(const label of ['Scale a = '+format(s.a),'Photon energy ×'+format(s.photonEnergy),'Light path χ = '+format(s.chi)]){
+        const span=document.createElement('span');span.textContent=label;el('ct-stats').appendChild(span);
+      }
+      const names=['Matter','Radiation','Λ'];el('ct-composition').replaceChildren();el('ct-legend').replaceChildren();
+      const shares=[];
+      s.fractions.forEach((v,i)=>{
+        const seg=document.createElement('span');seg.style.width=(v*100)+'%';seg.style.background=colors[i];el('ct-composition').appendChild(seg);
+        const item=document.createElement('span'),dot=document.createElement('i'),text=document.createElement('span');dot.className='cosmo-swatch';dot.style.background=colors[i];
+        const description=names[i]+' '+format(v*100,1)+'%';text.textContent=description;shares.push(description);item.appendChild(dot);item.appendChild(text);el('ct-legend').appendChild(item);
+      });
+      if(s.fractions.every(v=>v===0)){el('ct-legend').replaceChildren();el('ct-legend').textContent='Empty: no matter, radiation or Λ density.';}
+      el('ct-composition').setAttribute('aria-label',shares.join(', '));
+      const w=Math.max(260,root.getBoundingClientRect().width),compact=w<450,left=35,right=w-37,cy=120;
+      const maxA=Math.max(...run.rows.map(r=>r.y[0])),radius=a=>78*a/maxA,rx=a=>25*a/maxA,x=u=>left+(right-left)*u/run.end;
+      svg.setAttribute('viewBox',`0 0 ${w} 340`);svg.setAttribute('height',340);svg.replaceChildren();
+      node('title',{id:'ct-title'},'Expanding and contracting tunnel of cosmic time slices');
+      node('desc',{id:'ct-desc'},'Equal-time rings have radii proportional to scale factor. A highlighted ring is the selected slice. The sinusoid below compares a test photon wavelength to its emission wavelength on a fixed illustrative distance scale. Dots follow fixed comoving coordinates. The circular drawing does not specify the topology or total size of the universe.');
+      const neutral='var(--border)',foreground='var(--foreground)',series=colors[0],N=compact?15:27;
+      const samples=Array.from({length:N+1},(_,i)=>TunnelCosmology.sample(run,run.end*i/N));
+      for(const sign of [-1,1]){
+        const path=samples.map((q,i)=>`${i?'L':'M'} ${x(q.t)} ${cy+sign*radius(q.a)}`).join(' ');
+        node('path',{d:path,stroke:neutral,'stroke-width':1,fill:'none'});
+      }
+      for(let i=N;i>=0;i--){const q=samples[i],r=radius(q.a);node('ellipse',{cx:x(q.t),cy,rx:rx(q.a),ry:r,stroke:neutral,'stroke-width':1,fill:'none'});}
+      for(const theta of [Math.PI/3,4*Math.PI/3]){
+        const path=samples.map((q,i)=>`${i?'L':'M'} ${x(q.t)+rx(q.a)*Math.cos(theta)} ${cy+radius(q.a)*Math.sin(theta)}`).join(' ');
+        node('path',{d:path,stroke:series,'stroke-width':1.5,fill:'none',opacity:.65});
+      }
+      const sx=x(t),sy=cy,r=radius(s.a);
+      node('ellipse',{cx:sx,cy:sy,rx:rx(s.a),ry:r,stroke:foreground,'stroke-width':1.8,fill:'none'});
+      for(const theta of [Math.PI/3,4*Math.PI/3])node('circle',{cx:sx+rx(s.a)*Math.cos(theta),cy:cy+r*Math.sin(theta),r:3.5,fill:series});
+      const tx=Math.min(w-70,Math.max(70,sx));node('text',{x:tx,y:18,'text-anchor':'middle'},'Selected slice');
+      node('line',{x1:tx,y1:24,x2:sx,y2:cy-r-7,stroke:neutral,'stroke-width':1});
+      node('line',{x1:left,y1:215,x2:right,y2:215,stroke:neutral,'stroke-width':1});
+      node('text',{x:left,y:233,'text-anchor':'middle'},'0');node('text',{x:right,y:233,'text-anchor':'middle'},format(run.end,2));
+      node('text',{x:w/2,y:252,'text-anchor':'middle'},'Cosmic time u = Href Δt');
+      node('text',{x:left,y:282},'Photon wavelength ×'+format(s.wavelength,2));
+      const lambdaPixels=20*s.wavelength,pts=[];
+      for(let xx=left;xx<=right;xx+=1)pts.push(`${xx===left?'M':'L'} ${xx} ${313+12*Math.sin(2*Math.PI*(xx-left)/lambdaPixels)}`);
+      node('path',{d:pts.join(' '),stroke:colors[1],'stroke-width':2,fill:'none'});
+    }
+    for(const id of ['ct-matter','ct-radiation','ct-lambda'])el(id).addEventListener('input',()=>{el('ct-preset').value='custom';rebuild();});
+    el('ct-preset').addEventListener('input',()=>{const p=TunnelCosmology.presets[el('ct-preset').value];if(!p)return;el('ct-matter').value=p.m;el('ct-radiation').value=p.r;el('ct-lambda').value=p.l;rebuild();});
+    el('ct-time').addEventListener('input',draw);
+    attachTunnelDrag(svg,el('ct-time'),point=>{const w=svg.viewBox.baseVal.width;return (point.x-35)/(w-72);});
+    if(typeof ResizeObserver!=='undefined')new ResizeObserver(draw).observe(root);
+    rebuild();
+  })();
+  </script>
+</div>

@@ -1,0 +1,120 @@
+<div id="state-tunnel-lab">
+  <style>
+    #state-tunnel-lab .tunnel-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;margin-bottom:16px}
+    #state-tunnel-lab .tunnel-fields label {min-width:0}
+    #state-tunnel-lab .tunnel-value {float:right;font-variant-numeric:tabular-nums}
+    #state-tunnel-lab .tunnel-diagram {display:block;width:100%;overflow:visible}
+    #state-tunnel-lab .tunnel-diagram text {fill:var(--foreground);font-family:inherit;font-size:12px;font-weight:400}
+    #state-tunnel-lab .tunnel-key {display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:8px}
+    #state-tunnel-lab .tunnel-key span {display:inline-flex;align-items:center;gap:6px}
+    #state-tunnel-lab .tunnel-dot {width:9px;height:9px;border-radius:50%;display:inline-block}
+    #state-tunnel-lab .tunnel-readout {margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 24px;font-variant-numeric:tabular-nums}
+    #state-tunnel-lab [hidden] {display:none!important}
+    @media(max-width:420px){#state-tunnel-lab .tunnel-fields{grid-template-columns:1fr;gap:12px}}
+  </style>
+  <h3>A history of quantum states</h3>
+  <div class="tunnel-fields">
+    <label class="form-label" for="st-initial">Initial state
+      <select class="form-select" id="st-initial">
+        <option value="excited">A excited, B unexcited</option>
+        <option value="bell">Entangled, 50/50 probabilities</option>
+        <option value="mixture">Unentangled, 50/50 mixture</option>
+      </select>
+    </label>
+    <label class="form-label" for="st-clock">Clock comparison
+      <select class="form-select" id="st-clock">
+        <option value="local">Local lab time</option>
+        <option value="sr">SR: lab moving past observer</option>
+        <option value="gr">GR: lab held near spherical mass</option>
+      </select>
+    </label>
+    <label class="form-label" for="st-coupling">Coupling J <output class="tunnel-value" id="st-j-value">1.00 / T₀</output>
+      <input class="form-range" id="st-coupling" type="range" min="0" max="2" step="0.05" value="1">
+    </label>
+    <label class="form-label" for="st-noise">Dephasing γ <output class="tunnel-value" id="st-g-value">0.00 / T₀</output>
+      <input class="form-range" id="st-noise" type="range" min="0" max="4" step="0.05" value="0">
+    </label>
+    <label class="form-label" for="st-amount" id="st-amount-wrap" hidden><span id="st-amount-label">Speed v/c</span> <output class="tunnel-value" id="st-a-value">0.60</output>
+      <input class="form-range" id="st-amount" type="range" min="0" max="0.8" step="0.01" value="0.6">
+    </label>
+  </div>
+  <label class="form-label" for="st-time">Time slice <output class="tunnel-value" id="st-t-value">t = 0.785 T₀</output></label>
+  <input class="form-range" id="st-time" type="range" min="0" max="8" step="0.001" value="0.7853981633974483">
+  <p class="drag-hint">↔ Drag across the tunnel to choose a slice. The slider also works with arrow keys.</p>
+  <svg class="tunnel-diagram" id="st-diagram" role="img" aria-labelledby="st-svg-title st-svg-desc"></svg>
+  <div class="tunnel-key text-small">
+    <span><i class="tunnel-dot" style="background:var(--viz-series-1)"></i>A excitation probability</span>
+    <span><i class="tunnel-dot" style="background:var(--viz-series-2)"></i>B excitation probability</span>
+    <span><i class="tunnel-dot" style="background:var(--viz-series-3)"></i>Entanglement link</span>
+  </div>
+  <div class="tunnel-readout" id="st-readout" aria-live="polite" aria-atomic="true"></div>
+  <script>
+  (()=>{
+    /*__MODEL__*/
+/*__DRAG__*/
+    const root=document.getElementById('state-tunnel-lab');
+    const el=id=>root.querySelector('#'+id);
+    const svg=el('st-diagram');
+    const fields=['st-initial','st-clock','st-coupling','st-noise','st-amount','st-time'];
+    const fmt=(v,n=2)=>Number(v).toFixed(n);
+    const node=(tag,attrs={},text='')=>{
+      const n=document.createElementNS('http://www.w3.org/2000/svg',tag);
+      Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));
+      if(text) n.textContent=text; svg.appendChild(n);return n;
+    };
+    function parameters(){
+      const mode=el('st-clock').value, amount=+el('st-amount').value;
+      return {t:+el('st-time').value,J:+el('st-coupling').value,gamma:+el('st-noise').value,initial:el('st-initial').value,mode,amount,rate:TunnelPhysics.clockRate(mode,amount)};
+    }
+    function draw(){
+      const p=parameters(), s=TunnelPhysics.state(p.t,p.J,p.gamma,p.initial,p.rate);
+      el('st-amount-wrap').hidden=p.mode==='local';
+      el('st-amount-label').textContent=p.mode==='gr'?'Compactness 2GM/(rc²)':'Speed v/c';
+      el('st-j-value').textContent=fmt(p.J)+' / T₀';
+      el('st-g-value').textContent=fmt(p.gamma)+' / T₀';
+      el('st-a-value').textContent=fmt(p.amount);
+      el('st-t-value').textContent='t = '+fmt(s.t,3)+' T₀';
+      el('st-readout').replaceChildren();
+      for (const label of ['Local τ = '+fmt(s.tau,3)+' T₀','P(A=1) = '+fmt(100*s.pA,1)+'%','P(B=1) = '+fmt(100*s.pB,1)+'%','Entanglement = '+fmt(s.concurrence,3)]){
+        const span=document.createElement('span');span.textContent=label;el('st-readout').appendChild(span);
+      }
+      root.dataset.state=JSON.stringify(s);
+      const w=Math.max(260,root.getBoundingClientRect().width), h=265, compact=w<450;
+      const left=compact?43:66,right=w-(compact?38:58),rx=compact?19:31, ry=67, cy=125;
+      const cx=t=>left+(right-left)*t/8, yc=t=>cy-19*t/8;
+      svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);svg.replaceChildren();
+      node('title',{id:'st-svg-title'},'Tunnel showing quantum states across coordinate time');
+      node('desc',{id:'st-svg-desc'},'Each ring is a compressed snapshot of the modelled system. Circle areas encode excitation probabilities. The selected ring contains a line whose width encodes two-qubit concurrence, from zero to one. Tube dimensions and line lengths are schematic, not physical distances.');
+      const structure='var(--border)', foreground='var(--foreground)';
+      const cA='var(--viz-series-1)',cB='var(--viz-series-2)',cC='var(--viz-series-3)';
+      node('path',{d:`M ${left} ${cy-ry} L ${right} ${yc(8)-ry} M ${left} ${cy+ry} L ${right} ${yc(8)+ry}`,stroke:structure,'stroke-width':1,fill:'none'});
+      const rings=compact?8:16;
+      for(let i=rings;i>=0;i--){
+        const t=8*i/rings,q=TunnelPhysics.state(t,p.J,p.gamma,p.initial,p.rate),x=cx(t),y=yc(t);
+        node('ellipse',{cx:x,cy:y,rx,ry,stroke:structure,'stroke-width':1,fill:'none'});
+        if(q.pA>1e-10)node('circle',{cx:x,cy:y-ry,r:7*Math.sqrt(q.pA),fill:cA,opacity:.55});
+        if(q.pB>1e-10)node('circle',{cx:x,cy:y+ry,r:7*Math.sqrt(q.pB),fill:cB,opacity:.55});
+      }
+      const sx=cx(p.t), sy=yc(p.t);
+      node('ellipse',{cx:sx,cy:sy,rx,ry,stroke:foreground,'stroke-width':1.5,fill:'none'});
+      if(s.concurrence>1e-8)node('line',{x1:sx,y1:sy-ry+12,x2:sx,y2:sy+ry-12,stroke:cC,'stroke-width':7*s.concurrence,'stroke-linecap':'round'});
+      if(s.pA>1e-10)node('circle',{cx:sx,cy:sy-ry,r:10*Math.sqrt(s.pA),fill:cA});
+      if(s.pB>1e-10)node('circle',{cx:sx,cy:sy+ry,r:10*Math.sqrt(s.pB),fill:cB});
+      node('text',{x:left-rx-8,y:cy-ry+4,'text-anchor':'end'},'A');
+      node('text',{x:left-rx-8,y:cy+ry+4,'text-anchor':'end'},'B');
+      const tx=Math.min(w-70,Math.max(70,sx));
+      node('text',{x:tx,y:20,'text-anchor':'middle'},'Selected slice');
+      node('line',{x1:tx,y1:25,x2:sx,y2:sy-ry-14,stroke:structure,'stroke-width':1});
+      node('line',{x1:left,y1:218,x2:right,y2:218,stroke:structure,'stroke-width':1});
+      node('path',{d:`M ${right-6} 214 L ${right} 218 L ${right-6} 222`,stroke:structure,'stroke-width':1,fill:'none'});
+      node('text',{x:left,y:237,'text-anchor':'middle'},'0');
+      node('text',{x:right,y:237,'text-anchor':'middle'},'8');
+      node('text',{x:(left+right)/2,y:255,'text-anchor':'middle'},'Coordinate time t / T₀');
+    }
+    fields.forEach(id=>el(id).addEventListener('input',draw));
+    attachTunnelDrag(svg,el('st-time'),point=>{const w=svg.viewBox.baseVal.width,c=w<450,left=c?43:66,right=w-(c?38:58);return (point.x-left)/(right-left);});
+    if(typeof ResizeObserver!=='undefined')new ResizeObserver(draw).observe(root);
+    draw();
+  })();
+  </script>
+</div>

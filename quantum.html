@@ -1,0 +1,203 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="A playful thought experiment about spacetime, quantum states and cosmology, with draggable JavaScript experiments and inspectable equations."><title>Tunnel Lab · Quantum states</title><link rel="stylesheet" href="assets/legacy.css"><link rel="stylesheet" href="assets/app.css"></head><body><a class="skip-link" href="#main">Skip to content</a><div class="topbar"><a class="brand" href="index.html">◌ TUNNEL LAB</a><nav aria-label="Main"><a href="index.html">The idea</a><a aria-current="page" href="quantum.html">Quantum</a><a href="expansion.html">Expansion</a><a href="relativity.html">Relativity</a><a href="guide.html">Field notes</a></nav></div><main id="main"><header><div class="eyebrow">EXPERIMENT 01 / QUANTUM STATES</div><h1>Same probabilities.<br>Different quantum states.</h1><p class="intro">Explore two quantum systems through a tunnel of snapshots. The wall shows excitation probabilities; the interior line shows entanglement. The tunnel is a diagram, while the small-system quantum dynamics and clock comparisons use established equations.</p></header><div id="state-tunnel-lab">
+  <style>
+    #state-tunnel-lab .tunnel-fields {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px 24px;margin-bottom:16px}
+    #state-tunnel-lab .tunnel-fields label {min-width:0}
+    #state-tunnel-lab .tunnel-value {float:right;font-variant-numeric:tabular-nums}
+    #state-tunnel-lab .tunnel-diagram {display:block;width:100%;overflow:visible}
+    #state-tunnel-lab .tunnel-diagram text {fill:var(--foreground);font-family:inherit;font-size:12px;font-weight:400}
+    #state-tunnel-lab .tunnel-key {display:flex;flex-wrap:wrap;gap:8px 22px;margin-top:8px}
+    #state-tunnel-lab .tunnel-key span {display:inline-flex;align-items:center;gap:6px}
+    #state-tunnel-lab .tunnel-dot {width:9px;height:9px;border-radius:50%;display:inline-block}
+    #state-tunnel-lab .tunnel-readout {margin-top:14px;display:flex;flex-wrap:wrap;gap:8px 24px;font-variant-numeric:tabular-nums}
+    #state-tunnel-lab [hidden] {display:none!important}
+    @media(max-width:420px){#state-tunnel-lab .tunnel-fields{grid-template-columns:1fr;gap:12px}}
+  </style>
+  <h3>A history of quantum states</h3>
+  <div class="tunnel-fields">
+    <label class="form-label" for="st-initial">Initial state
+      <select class="form-select" id="st-initial">
+        <option value="excited">A excited, B unexcited</option>
+        <option value="bell">Entangled, 50/50 probabilities</option>
+        <option value="mixture">Unentangled, 50/50 mixture</option>
+      </select>
+    </label>
+    <label class="form-label" for="st-clock">Clock comparison
+      <select class="form-select" id="st-clock">
+        <option value="local">Local lab time</option>
+        <option value="sr">SR: lab moving past observer</option>
+        <option value="gr">GR: lab held near spherical mass</option>
+      </select>
+    </label>
+    <label class="form-label" for="st-coupling">Coupling J <output class="tunnel-value" id="st-j-value">1.00 / T₀</output>
+      <input class="form-range" id="st-coupling" type="range" min="0" max="2" step="0.05" value="1">
+    </label>
+    <label class="form-label" for="st-noise">Dephasing γ <output class="tunnel-value" id="st-g-value">0.00 / T₀</output>
+      <input class="form-range" id="st-noise" type="range" min="0" max="4" step="0.05" value="0">
+    </label>
+    <label class="form-label" for="st-amount" id="st-amount-wrap" hidden><span id="st-amount-label">Speed v/c</span> <output class="tunnel-value" id="st-a-value">0.60</output>
+      <input class="form-range" id="st-amount" type="range" min="0" max="0.8" step="0.01" value="0.6">
+    </label>
+  </div>
+  <label class="form-label" for="st-time">Time slice <output class="tunnel-value" id="st-t-value">t = 0.785 T₀</output></label>
+  <input class="form-range" id="st-time" type="range" min="0" max="8" step="0.001" value="0.7853981633974483">
+  <p class="drag-hint">↔ Drag across the tunnel to choose a slice. The slider also works with arrow keys.</p>
+  <svg class="tunnel-diagram" id="st-diagram" role="img" aria-labelledby="st-svg-title st-svg-desc"></svg>
+  <div class="tunnel-key text-small">
+    <span><i class="tunnel-dot" style="background:var(--viz-series-1)"></i>A excitation probability</span>
+    <span><i class="tunnel-dot" style="background:var(--viz-series-2)"></i>B excitation probability</span>
+    <span><i class="tunnel-dot" style="background:var(--viz-series-3)"></i>Entanglement link</span>
+  </div>
+  <div class="tunnel-readout" id="st-readout" aria-live="polite" aria-atomic="true"></div>
+  <script>
+  (()=>{
+    /* Tunnel model v0.1. Exact two-qubit effective dynamics in local proper time. */
+const TunnelPhysics = (() => {
+  function clockRate(mode = 'local', amount = 0) {
+    if (!Number.isFinite(amount) || amount < 0 || amount >= 1) throw new RangeError('Clock parameter must be in [0,1).');
+    if (mode === 'local') return 1;
+    if (mode === 'sr') return Math.sqrt(1 - amount * amount);
+    if (mode === 'gr') return Math.sqrt(1 - amount);
+    throw new RangeError('Unknown clock mode.');
+  }
+  function state(t, J = 1, gamma = 0, initial = 'excited', rate = 1) {
+    if (![t,J,gamma,rate].every(Number.isFinite) || t<0 || J<0 || gamma<0 || rate<=0 || rate>1) throw new RangeError('Invalid dynamics parameter.');
+    if (!['excited','bell','mixture'].includes(initial)) throw new RangeError('Unknown initial state.');
+    const tau=t*rate, a=gamma/2, z0=initial==='excited'?1:0, x0=initial==='bell'?1:0;
+    let z=z0, y=0;
+    if (J>0) {
+      const d=4*J*J-a*a;
+      let ec, es;
+      if (Math.abs(d)*tau*tau < 1e-10) {
+        // Series at the critically damped point. Stable also for tau=0.
+        const e=Math.exp(-a*tau), q=d*tau*tau;
+        ec=e*(1-q/2+q*q/24);
+        es=e*tau*(1-q/6+q*q/120);
+      } else if (d>0) {
+        const w=Math.sqrt(d), e=Math.exp(-a*tau);
+        ec=e*Math.cos(w*tau); es=e*Math.sin(w*tau)/w;
+      } else {
+        const k=Math.sqrt(-d);
+        // Avoid cosh overflow and cancellation in -a+k.
+        const slow=Math.exp((-4*J*J/(a+k))*tau), fast=Math.exp((-a-k)*tau);
+        ec=(slow+fast)/2; es=(slow-fast)/(2*k);
+      }
+      z=(ec+a*es)*z0; y=-2*J*es*z0;
+    }
+    const x=x0*Math.exp(-gamma*tau), pA=(1+z)/2, pB=(1-z)/2;
+    return {t,tau,J,gamma,initial,rate,x,y,z,pA,pB,concurrence:Math.hypot(x,y),purity:(1+x*x+y*y+z*z)/2,
+      // Complex entries as [real, imaginary], basis |10>, |01>.
+      rho:[[[pA,0],[x/2,-y/2]],[[x/2,y/2],[pB,0]]],
+      sites:{A:[-0.5,0,0],B:[0.5,0,0]},spatial_units:'site separation d',zzCorrelation:-1};
+  }
+  return {state,clockRate};
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports=TunnelPhysics;
+
+/* Pointer capture makes scrubbing work outside the original mark, with touch and pen too.
+   A native range input is always provided as the keyboard/screen-reader alternative. */
+function attachTunnelDrag(svg,input,fractionAt) {
+  let pointer=null;
+  function update(event) {
+    const point=new DOMPoint(event.clientX,event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+    const f=Math.max(0,Math.min(1,fractionAt(point)));
+    const min=Number(input.min),max=Number(input.max),step=Number(input.step)||.001;
+    input.value=String(Math.max(min,Math.min(max,min+Math.round((f*(max-min))/step)*step)));
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  }
+  svg.addEventListener('pointerdown',event=>{
+    if(!event.isPrimary||event.button!==0||input.disabled)return;
+    pointer=event.pointerId;svg.setPointerCapture(pointer);update(event);event.preventDefault();
+  });
+  svg.addEventListener('pointermove',event=>{if(pointer===event.pointerId)update(event);});
+  const finish=event=>{if(pointer===event.pointerId)pointer=null;};
+  svg.addEventListener('pointerup',finish);
+  svg.addEventListener('pointercancel',finish);
+  svg.addEventListener('lostpointercapture',finish);
+}
+
+    const root=document.getElementById('state-tunnel-lab');
+    const el=id=>root.querySelector('#'+id);
+    const svg=el('st-diagram');
+    const fields=['st-initial','st-clock','st-coupling','st-noise','st-amount','st-time'];
+    const fmt=(v,n=2)=>Number(v).toFixed(n);
+    const node=(tag,attrs={},text='')=>{
+      const n=document.createElementNS('http://www.w3.org/2000/svg',tag);
+      Object.entries(attrs).forEach(([k,v])=>n.setAttribute(k,v));
+      if(text) n.textContent=text; svg.appendChild(n);return n;
+    };
+    function parameters(){
+      const mode=el('st-clock').value, amount=+el('st-amount').value;
+      return {t:+el('st-time').value,J:+el('st-coupling').value,gamma:+el('st-noise').value,initial:el('st-initial').value,mode,amount,rate:TunnelPhysics.clockRate(mode,amount)};
+    }
+    function draw(){
+      const p=parameters(), s=TunnelPhysics.state(p.t,p.J,p.gamma,p.initial,p.rate);
+      el('st-amount-wrap').hidden=p.mode==='local';
+      el('st-amount-label').textContent=p.mode==='gr'?'Compactness 2GM/(rc²)':'Speed v/c';
+      el('st-j-value').textContent=fmt(p.J)+' / T₀';
+      el('st-g-value').textContent=fmt(p.gamma)+' / T₀';
+      el('st-a-value').textContent=fmt(p.amount);
+      el('st-t-value').textContent='t = '+fmt(s.t,3)+' T₀';
+      el('st-readout').replaceChildren();
+      for (const label of ['Local τ = '+fmt(s.tau,3)+' T₀','P(A=1) = '+fmt(100*s.pA,1)+'%','P(B=1) = '+fmt(100*s.pB,1)+'%','Entanglement = '+fmt(s.concurrence,3)]){
+        const span=document.createElement('span');span.textContent=label;el('st-readout').appendChild(span);
+      }
+      root.dataset.state=JSON.stringify(s);
+      const w=Math.max(260,root.getBoundingClientRect().width), h=265, compact=w<450;
+      const left=compact?43:66,right=w-(compact?38:58),rx=compact?19:31, ry=67, cy=125;
+      const cx=t=>left+(right-left)*t/8, yc=t=>cy-19*t/8;
+      svg.setAttribute('viewBox',`0 0 ${w} ${h}`);svg.setAttribute('height',h);svg.replaceChildren();
+      node('title',{id:'st-svg-title'},'Tunnel showing quantum states across coordinate time');
+      node('desc',{id:'st-svg-desc'},'Each ring is a compressed snapshot of the modelled system. Circle areas encode excitation probabilities. The selected ring contains a line whose width encodes two-qubit concurrence, from zero to one. Tube dimensions and line lengths are schematic, not physical distances.');
+      const structure='var(--border)', foreground='var(--foreground)';
+      const cA='var(--viz-series-1)',cB='var(--viz-series-2)',cC='var(--viz-series-3)';
+      node('path',{d:`M ${left} ${cy-ry} L ${right} ${yc(8)-ry} M ${left} ${cy+ry} L ${right} ${yc(8)+ry}`,stroke:structure,'stroke-width':1,fill:'none'});
+      const rings=compact?8:16;
+      for(let i=rings;i>=0;i--){
+        const t=8*i/rings,q=TunnelPhysics.state(t,p.J,p.gamma,p.initial,p.rate),x=cx(t),y=yc(t);
+        node('ellipse',{cx:x,cy:y,rx,ry,stroke:structure,'stroke-width':1,fill:'none'});
+        if(q.pA>1e-10)node('circle',{cx:x,cy:y-ry,r:7*Math.sqrt(q.pA),fill:cA,opacity:.55});
+        if(q.pB>1e-10)node('circle',{cx:x,cy:y+ry,r:7*Math.sqrt(q.pB),fill:cB,opacity:.55});
+      }
+      const sx=cx(p.t), sy=yc(p.t);
+      node('ellipse',{cx:sx,cy:sy,rx,ry,stroke:foreground,'stroke-width':1.5,fill:'none'});
+      if(s.concurrence>1e-8)node('line',{x1:sx,y1:sy-ry+12,x2:sx,y2:sy+ry-12,stroke:cC,'stroke-width':7*s.concurrence,'stroke-linecap':'round'});
+      if(s.pA>1e-10)node('circle',{cx:sx,cy:sy-ry,r:10*Math.sqrt(s.pA),fill:cA});
+      if(s.pB>1e-10)node('circle',{cx:sx,cy:sy+ry,r:10*Math.sqrt(s.pB),fill:cB});
+      node('text',{x:left-rx-8,y:cy-ry+4,'text-anchor':'end'},'A');
+      node('text',{x:left-rx-8,y:cy+ry+4,'text-anchor':'end'},'B');
+      const tx=Math.min(w-70,Math.max(70,sx));
+      node('text',{x:tx,y:20,'text-anchor':'middle'},'Selected slice');
+      node('line',{x1:tx,y1:25,x2:sx,y2:sy-ry-14,stroke:structure,'stroke-width':1});
+      node('line',{x1:left,y1:218,x2:right,y2:218,stroke:structure,'stroke-width':1});
+      node('path',{d:`M ${right-6} 214 L ${right} 218 L ${right-6} 222`,stroke:structure,'stroke-width':1,fill:'none'});
+      node('text',{x:left,y:237,'text-anchor':'middle'},'0');
+      node('text',{x:right,y:237,'text-anchor':'middle'},'8');
+      node('text',{x:(left+right)/2,y:255,'text-anchor':'middle'},'Coordinate time t / T₀');
+    }
+    fields.forEach(id=>el(id).addEventListener('input',draw));
+    attachTunnelDrag(svg,el('st-time'),point=>{const w=svg.viewBox.baseVal.width,c=w<450,left=c?43:66,right=w-(c?38:58);return (point.x-left)/(right-left);});
+    if(typeof ResizeObserver!=='undefined')new ResizeObserver(draw).observe(root);
+    draw();
+  })();
+  </script>
+</div>
+
+<section class="notes"><h2>What the picture means</h2>
+<p>Each ring compresses one three-dimensional snapshot of the modelled lab. A and B occupy fixed local positions (−d/2, 0, 0) and (d/2, 0, 0). The dot locations on a ring are labels, not their physical coordinates. Circle area encodes probability; the selected pair is enlarged. Line width encodes concurrence, from 0 (unentangled) to 1 (maximally entangled).</p>
+<p>T₀ is an arbitrary reference time. Changing a control recalculates the history from the chosen initial state. It does not apply a pulse midway through the experiment.</p>
+<h2>Try three experiments</h2><ol>
+<li><strong>Exchange:</strong> start with A excited, J = 1 and no dephasing. At local time 0.785 T₀ the pair is nearly maximally entangled. At 1.571 T₀ the excitation has moved to B.</li>
+<li><strong>Same probabilities, different state:</strong> compare the two 50/50 initial states. The wall probabilities match, while the entanglement link differs. Add dephasing to the entangled state and scrub time.</li>
+<li><strong>Different clocks:</strong> choose SR and set speed to 0.60, or choose GR and set compactness to 0.36. In either case, the local clock advances at 80% of the comparison clock. Equal local elapsed times give equal quantum states.</li></ol>
+<details><summary>The mathematics, in brief</summary>
+<p>The pair has one excitation, shared between states |10⟩ and |01⟩. In the isolated case, starting with A excited:</p>
+<div class="math-block"><span class="katex"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi mathvariant="normal">∣</mi><mi>ψ</mi><mo stretchy="false">(</mo><mi>τ</mi><mo stretchy="false">)</mo><mo stretchy="false">⟩</mo><mo>=</mo><mi>cos</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>J</mi><mi>τ</mi><mo stretchy="false">)</mo><mi mathvariant="normal">∣</mi><mn>10</mn><mo stretchy="false">⟩</mo><mo>−</mo><mi>i</mi><mi>sin</mi><mo>⁡</mo><mo stretchy="false">(</mo><mi>J</mi><mi>τ</mi><mo stretchy="false">)</mo><mi mathvariant="normal">∣</mi><mn>01</mn><mo stretchy="false">⟩</mo><mi mathvariant="normal">.</mi></mrow><annotation encoding="application/x-tex">|\psi(\tau)\rangle=\cos(J\tau)|10\rangle-i\sin(J\tau)|01\rangle.</annotation></semantics></math></span><details class="tex-source"><summary>LaTeX source</summary><pre><code>|\psi(\tau)\rangle=\cos(J\tau)|10\rangle-i\sin(J\tau)|01\rangle.</code></pre></details></div>
+<p>The general calculation uses a density matrix and a Lindblad dephasing equation. It is solved analytically, with no integration step error. Local elapsed time is τ = a·t, where a = 1 locally, √(1 − v²/c²) in the SR comparison, or √(1 − 2GM/rc²) for the static GR comparison.</p>
+<p>The tunnel history records spatial geometry, quantum state and a chosen time label. Nonspatial state variables supply extra descriptive dimensions; they do not add directions in physical space. See <a href="MODEL.md">MODEL.md</a> for the equations, assumptions and broader SM/GR architecture.</p></details>
+<details><summary>Physical scope and limits</summary>
+<p>This is a small nonrelativistic quantum lab with an effective exchange interaction. It is not a simulation of the whole universe, the Standard Model, or quantum gravity.</p>
+<p>The SR mode compares a small inertial lab with another frame. The GR mode treats a small lab held stationary outside a nonrotating spherical source, with negligible tidal variation and backreaction. It uses an established clock rate on a prescribed background; it does not evolve gravity.</p>
+<p>The interior line is a correlation visualization, not a physical wire or signal channel. Both the visible wall data and the information represented inside are quantum. There is no universal present or extra spatial interior in this construction.</p></details>
+<p><a href="README.md">Guide and test commands</a> · <a href="MODEL.md">Full model and sources</a> · <a href="model.py">Python engine</a></p></section>
+<footer>Victor’s tunnel concept · Two-qubit exchange, dephasing and clock comparisons.</footer></main>
+</body></html>

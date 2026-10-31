@@ -1,0 +1,19 @@
+<main><header><div class="eyebrow">EXPERIMENT 01 / QUANTUM STATES</div><h1>Same probabilities.<br>Different quantum states.</h1><p class="intro">Explore two quantum systems through a tunnel of snapshots. The wall shows excitation probabilities; the interior line shows entanglement. The tunnel is a diagram, while the small-system quantum dynamics and clock comparisons use established equations.</p></header>/*__FRAGMENT__*/
+<section class="notes"><h2>What the picture means</h2>
+<p>Each ring compresses one three-dimensional snapshot of the modelled lab. A and B occupy fixed local positions (−d/2, 0, 0) and (d/2, 0, 0). The dot locations on a ring are labels, not their physical coordinates. Circle area encodes probability; the selected pair is enlarged. Line width encodes concurrence, from 0 (unentangled) to 1 (maximally entangled).</p>
+<p>T₀ is an arbitrary reference time. Changing a control recalculates the history from the chosen initial state. It does not apply a pulse midway through the experiment.</p>
+<h2>Try three experiments</h2><ol>
+<li><strong>Exchange:</strong> start with A excited, J = 1 and no dephasing. At local time 0.785 T₀ the pair is nearly maximally entangled. At 1.571 T₀ the excitation has moved to B.</li>
+<li><strong>Same probabilities, different state:</strong> compare the two 50/50 initial states. The wall probabilities match, while the entanglement link differs. Add dephasing to the entangled state and scrub time.</li>
+<li><strong>Different clocks:</strong> choose SR and set speed to 0.60, or choose GR and set compactness to 0.36. In either case, the local clock advances at 80% of the comparison clock. Equal local elapsed times give equal quantum states.</li></ol>
+<details><summary>The mathematics, in brief</summary>
+<p>The pair has one excitation, shared between states |10⟩ and |01⟩. In the isolated case, starting with A excited:</p>
+\[|\psi(\tau)\rangle=\cos(J\tau)|10\rangle-i\sin(J\tau)|01\rangle.\]
+<p>The general calculation uses a density matrix and a Lindblad dephasing equation. It is solved analytically, with no integration step error. Local elapsed time is τ = a·t, where a = 1 locally, √(1 − v²/c²) in the SR comparison, or √(1 − 2GM/rc²) for the static GR comparison.</p>
+<p>The tunnel history records spatial geometry, quantum state and a chosen time label. Nonspatial state variables supply extra descriptive dimensions; they do not add directions in physical space. See <a href="MODEL.md">MODEL.md</a> for the equations, assumptions and broader SM/GR architecture.</p></details>
+<details><summary>Physical scope and limits</summary>
+<p>This is a small nonrelativistic quantum lab with an effective exchange interaction. It is not a simulation of the whole universe, the Standard Model, or quantum gravity.</p>
+<p>The SR mode compares a small inertial lab with another frame. The GR mode treats a small lab held stationary outside a nonrotating spherical source, with negligible tidal variation and backreaction. It uses an established clock rate on a prescribed background; it does not evolve gravity.</p>
+<p>The interior line is a correlation visualization, not a physical wire or signal channel. Both the visible wall data and the information represented inside are quantum. There is no universal present or extra spatial interior in this construction.</p></details>
+<p><a href="README.md">Guide and test commands</a> · <a href="MODEL.md">Full model and sources</a> · <a href="model.py">Python engine</a></p></section>
+<footer>Victor’s tunnel concept · Two-qubit exchange, dephasing and clock comparisons.</footer></main>

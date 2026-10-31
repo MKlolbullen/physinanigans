@@ -1,0 +1,44 @@
+<main id="main"><header><div class="eyebrow">EXPERIMENT 03 / SLICING SPACETIME</div><h1>Whose slice<br>is “now”?</h1><p class="intro">A tunnel suggests a stack of moments. Relativity adds a twist: observers in relative motion use different stacks. Drag the teal handle to change the observer’s speed, or the purple handle to choose their time slice.</p></header>
+<section class="relativity-lab"><div class="sr-layout"><div><svg id="sr-diagram" class="sr-diagram" viewBox="0 0 600 520" role="img" aria-labelledby="sr-title sr-desc"></svg><p class="drag-hint">Teal handle: horizontal drag changes speed. Purple handle: vertical drag changes the time slice. Both have sliders.</p></div><div class="sr-controls"><label class="form-label" for="sr-beta">Observer velocity β = v/c <output id="sr-beta-value"></output><input class="form-range" id="sr-beta" type="range" min="-0.9" max="0.9" step="0.01" value="0.6"></label><label class="form-label" for="sr-time">Moving-frame time T′ <output id="sr-time-value"></output><input class="form-range" id="sr-time" type="range" min="-1.5" max="1.5" step="0.01" value="0"></label><button type="button" class="button" id="sr-reset">Reset</button><div class="sr-readout" id="sr-readout" aria-live="polite" aria-atomic="true"></div><p class="text-small subtle">T = ct/L and X = x/L. The scale L is arbitrary. The two other spatial axes are suppressed. This is a spacetime diagram, not a view of objects inside a room.</p></div></div></section>
+<section class="notes"><h2>Two flashes. Two definitions of simultaneous.</h2><p>Events A and B are fixed at (T, X) = (0, −1) and (0, +1). They are simultaneous in the original frame, shown by the horizontal dashed line. At β = 0.60, the moving observer assigns them T′<sub>A</sub> = +0.75 and T′<sub>B</sub> = −0.75. These events are spacelike separated, so their order can depend on the frame without reversing a causal influence.</p><p>The orange diagonals are light rays through the origin. The teal line is the moving observer’s worldline, X = βT. The purple line contains events simultaneous at the selected T′. Moving the handle changes a coordinate description; it does not send a signal or change either event.</p>
+\[T'=\Gamma(T-\beta X),\qquad X'=\Gamma(X-\beta T),\qquad\Gamma=\frac{1}{\sqrt{1-\beta^2}}.\]
+<p>Solving the first equation for the original time gives the purple slice:</p>
+\[T=\beta X+\frac{T'}{\Gamma}.\]
+<p>Every boost preserves the spacetime interval:</p>
+\[-T'^2+X'^2=-T^2+X^2.\]
+<h2>What this changes about the tunnel</h2><p>We can keep a chosen sequence of slices as a useful description. We just should not treat that sequence as a uniquely preferred universal present. The cosmology experiment has a particularly useful cosmic time associated with its comoving matter; that does not make all moving observers agree on simultaneity.</p><p>The quantum lab’s SR clock setting uses the same proper-time relationship along a single small lab’s worldline. It does not attempt to Lorentz-transform a spatially extended interacting quantum apparatus.</p><p><a href="RELATIVITY.md">Derivation, examples and sources</a> · <a href="docs/tunnel-notes.tex">Download the LaTeX notes</a></p></section><footer>Flat Minkowski spacetime · Constant relative velocity · Coordinate transformations are evaluated exactly, up to floating-point rounding.</footer></main>
+<script>/*__RELATIVITY__*/
+(()=>{
+ const $=id=>document.getElementById(id),svg=$('sr-diagram');let active=null;
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)),px=x=>300+90*x,py=t=>260-90*t;
+ function node(tag,attrs={},text=''){const n=document.createElementNS('http://www.w3.org/2000/svg',tag);for(const[k,v]of Object.entries(attrs))n.setAttribute(k,v);n.textContent=text;svg.appendChild(n);return n;}
+ function line(x1,t1,x2,t2,color,width=1,more={}){return node('line',{x1:px(x1),y1:py(t1),x2:px(x2),y2:py(t2),stroke:color,'stroke-width':width,...more});}
+ function draw(){
+  const b=+$('sr-beta').value,tp=+$('sr-time').value,g=TunnelRelativity.gamma(b);svg.replaceChildren();
+  node('title',{id:'sr-title'},'Different observers slice the same spacetime differently');
+  node('desc',{id:'sr-desc'},'Drag the teal observer handle horizontally to change velocity, and the purple slice handle vertically to change moving-frame time. The equivalent sliders support keyboard control. A and B are simultaneous in the original frame. Orange diagonal rays show light through the origin.');
+  for(let k=-2;k<=2;k++){line(k,-2.5,k,2.5,'#dce4df');line(-2.8,k,2.8,k,'#dce4df');if(k)node('text',{x:px(k),y:py(0)+19,'text-anchor':'middle'},String(k));if(k)node('text',{x:px(0)-10,y:py(k)+5,'text-anchor':'end'},String(k));}
+  line(0,-2.5,0,2.5,'#82979d');line(-2.8,0,2.8,0,'#82979d',1,{'stroke-dasharray':'5 4'});
+  node('text',{x:565,y:282},'X');node('text',{x:312,y:29},'T');
+  line(-2.5,-2.5,2.5,2.5,'#c96b46',1.5);line(2.5,-2.5,-2.5,2.5,'#c96b46',1.5);
+  line(-2.5*b,-2.5,2.5*b,2.5,'#137982',2);
+  // Clip to the visible T range, including time slices away from the origin.
+  let xl=-2.8,xr=2.8;if(Math.abs(b)>1e-10){const ends=[(-2.5-tp/g)/b,(2.5-tp/g)/b].sort((a,c)=>a-c);xl=Math.max(xl,ends[0]);xr=Math.min(xr,ends[1]);}
+  line(xl,TunnelRelativity.sliceT(xl,tp,b),xr,TunnelRelativity.sliceT(xr,tp,b),'#7958b6',2.5);
+  for(const [name,x]of [['A',-1],['B',1]]){node('circle',{cx:px(x),cy:py(0),r:5,fill:'#182d39'});node('text',{x:px(x),y:py(0)-14,'text-anchor':'middle'},name);}
+  node('circle',{cx:px(2*b),cy:py(2),r:11,fill:'#137982',class:'sr-handle','data-drag':'speed'});
+  node('text',{x:px(2*b),y:py(2)-19,'text-anchor':'middle'},'drag observer');
+  node('circle',{cx:px(0),cy:py(tp/g),r:10,fill:'#7958b6',class:'sr-handle','data-drag':'time'});
+  node('text',{x:px(0)+16,y:py(tp/g)-13},'drag slice');
+  $('sr-beta-value').textContent=' = '+b.toFixed(2);$('sr-time-value').textContent=' = '+tp.toFixed(2);
+  const A=TunnelRelativity.transform(0,-1,b),B=TunnelRelativity.transform(0,1,b);
+  $('sr-readout').innerHTML='<p class="metric">Lorentz factor Γ = '+g.toFixed(3)+'</p><p>Event A: T′ = '+A.T.toFixed(3)+'</p><p>Event B: T′ = '+B.T.toFixed(3)+'</p><p>Observer clock: dτ/dt = '+(1/g).toFixed(3)+'</p>';
+  svg.dataset.state=JSON.stringify({beta:b,Tprime:tp,gamma:g,A,B});
+ }
+ function move(e){const p=new DOMPoint(e.clientX,e.clientY).matrixTransform(svg.getScreenCTM().inverse());if(active.kind==='speed')$('sr-beta').value=String(clamp((p.x-300)/180,-.9,.9));else $('sr-time').value=String(clamp((260-p.y)/90*TunnelRelativity.gamma(+$('sr-beta').value),-1.5,1.5));draw();}
+ svg.addEventListener('pointerdown',e=>{const kind=e.target.getAttribute('data-drag');if(!kind||!e.isPrimary||e.button!==0)return;active={kind,id:e.pointerId};svg.setPointerCapture(e.pointerId);move(e);e.preventDefault();});
+ svg.addEventListener('pointermove',e=>{if(active&&active.id===e.pointerId)move(e);});
+ for(const name of ['pointerup','pointercancel','lostpointercapture'])svg.addEventListener(name,e=>{if(active&&active.id===e.pointerId)active=null;});
+ for(const name of ['sr-beta','sr-time'])$(name).addEventListener('input',draw);
+ $('sr-reset').addEventListener('click',()=>{$('sr-beta').value='.6';$('sr-time').value='0';draw();});draw();
+})();</script>

@@ -1,0 +1,131 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,geometry,hyperref}
+\geometry{margin=25mm}
+\setlength{\emergencystretch}{2em}
+\hypersetup{colorlinks=true,urlcolor=blue,linkcolor=blue}
+\title{Universe Tunnel Lab\\\large A playful picture, with inspectable mathematics}
+\author{Concept: Victor}
+\date{31 October 2026}
+\begin{document}
+\maketitle
+\begin{abstract}
+Imagine the history of a universe as a tunnel: each slice stands for three-dimensional space, and extra visual features carry information about matter, fields and correlations. This educational project explores that picture using small, explicitly specified models. A tunnel is a visualization convention; physical predictions come from the equations and assumptions below.
+\end{abstract}
+\section{Three directions, many state variables}
+A spatial dimension describes an independent direction in physical space. A state-space dimension describes an independent parameter needed to specify a state. They are different mathematical roles. A two-qubit pure state has six real parameters after normalization and removal of global phase; a general mixed state has fifteen. These are not extra directions in a room.
+
+For an appropriate classical-geometry/quantum-matter approximation, a schematic slice record is
+\begin{equation}
+\mathcal U_t=(\Sigma_t,h_{ij},K_{ij},\rho_t),\qquad
+\mathcal T=\{\mathcal U_t:t\in I\}.
+\end{equation}
+Here $\Sigma_t$ is a spatial hypersurface, $h_{ij}$ its metric, $K_{ij}$ its extrinsic curvature, and $\rho_t$ the density operator of retained matter/field degrees of freedom. A classical field model instead stores the necessary field values and conjugate momenta. Constraints restrict the allowable data. A global foliation requires appropriate spacetime assumptions, such as global hyperbolicity. This tuple alone supplies neither evolution laws nor quantum gravity.
+
+The tube wall displays selected observables. Interior links display correlations. Neither part is a separate physical domain; quantum mechanics describes both. Tunnel length is a chosen time label. There is no second external time moving the universe along the diagram.
+\section{The two-qubit laboratory}
+Two fixed local sites are at $\mathbf r_A=(-d/2,0,0)$ and $\mathbf r_B=(d/2,0,0)$. Exactly one excitation is retained, in the ordered basis $\{|10\rangle,|01\rangle\}$. An effective exchange Hamiltonian is
+\begin{equation}
+H=\frac{\hbar J}{2}(X_AX_B+Y_AY_B).
+\end{equation}
+The symbols $X,Y,Z$ denote Pauli operators, not spatial coordinates. Starting from $|10\rangle$, isolated proper-time evolution gives
+\begin{equation}
+|\psi(\tau)\rangle=\cos(J\tau)|10\rangle-i\sin(J\tau)|01\rangle.
+\end{equation}
+Consequently $P_A=\cos^2(J\tau)$, $P_B=\sin^2(J\tau)$ and concurrence $C=|\sin(2J\tau)|$.
+
+The implemented dephasing model is
+\begin{equation}
+\frac{d\rho}{d\tau}=-\frac{i}{\hbar}[H,\rho]
++\frac{\gamma}{4}\sum_{k=A,B}(Z_k\rho Z_k-\rho).
+\end{equation}
+This is a reduced, Markovian open-system model. It describes phase noise, not energy relaxation or a complete thermal environment. Its convention makes the $|10\rangle\langle01|$ coherence decay at rate $\gamma$ in the absence of exchange.
+
+In the one-excitation subspace, write
+\begin{equation}
+\rho=\frac12\begin{pmatrix}1+z&x-iy\\x+iy&1-z\end{pmatrix}.
+\end{equation}
+The Bloch variables $x,y,z$ are state coordinates, not positions. Direct substitution gives
+\begin{equation}
+\dot x=-\gamma x,\qquad\dot y=-\gamma y-2Jz,\qquad\dot z=2Jy,
+\end{equation}
+with dots denoting proper-time derivatives. Thus
+\begin{equation}
+\ddot z+\gamma\dot z+4J^2z=0.
+\end{equation}
+The engine uses analytic damped-oscillator solutions, including critical and overdamped limits. In this restricted state family,
+\begin{equation}
+P_A=(1+z)/2,\quad P_B=(1-z)/2,\quad
+C=\sqrt{x^2+y^2},\quad \operatorname{Tr}\rho^2=(1+x^2+y^2+z^2)/2.
+\end{equation}
+These concurrence and purity expressions should not be reused for arbitrary two-qubit states.
+
+Three initial states are provided: $(x,y,z)=(0,0,1)$ for $|10\rangle$; $(1,0,0)$ for $(|10\rangle+|01\rangle)/\sqrt2$; and $(0,0,0)$ for an equal mixture of the two basis states. The last two have identical local probabilities but different entanglement. All retain $\langle Z_AZ_B\rangle=-1$: no entanglement does not mean no correlation.
+\section{Clock comparisons and simultaneity}
+The local dynamics use $\tau=\alpha t$ with a constant clock ratio. The three selectable models are
+\begin{equation}
+\alpha=1,\qquad
+\alpha=\sqrt{1-v^2/c^2},\qquad
+\alpha=\sqrt{1-2GM/(rc^2)}.
+\end{equation}
+The SR comparison is a small inertial lab. The GR comparison is a small lab held at fixed exterior Schwarzschild radius, relative to time at infinity, outside both the material source and horizon. Tidal variation and backreaction are neglected. The settings are alternatives; their factors are not combined into a claimed general solution. The effective exchange model does not resolve the propagation time of a mediator.
+
+The separate relativity diagram uses $T=ct/L$, $X=x/L$, $\beta=v/c$ and $\Gamma=(1-\beta^2)^{-1/2}$:
+\begin{align}
+T'&=\Gamma(T-\beta X),&X'&=\Gamma(X-\beta T),\\
+T&=\beta X+T'/\Gamma,&-T'^2+X'^2&=-T^2+X^2.
+\end{align}
+A line of constant $T'$ is a different simultaneity slice for each velocity. At $\beta=0.6$, the events $(T,X)=(0,-1)$ and $(0,+1)$ have $T'=+0.75$ and $-0.75$. They are spacelike separated. Their coordinate ordering can differ without reversing a causal influence.
+\section{An evolving cosmological background}
+A homogeneous, isotropic FLRW model has
+\begin{equation}
+ds^2=-c^2dt^2+a^2(t)d\ell_k^2.
+\end{equation}
+The reference spatial metric $d\ell_k^2$ has length units; $a$ is dimensionless. Cosmic time is proper time of comoving observers. It is useful in this symmetry reduction, not a universal simultaneity imposed on every observer.
+
+The reference-density parameters obey $\Omega_k=1-\Omega_m-\Omega_r-\Omega_\Lambda$. With $H=\dot a/a$,
+\begin{equation}
+\frac{H^2}{H_{\rm ref}^2}=\frac{\Omega_r}{a^4}+\frac{\Omega_m}{a^3}+\frac{\Omega_k}{a^2}+\Omega_\Lambda.
+\end{equation}
+Set $u=H_{\rm ref}(t-t_{\rm start})$ and $v=da/du$. The numerical system is
+\begin{equation}
+a'=v,\qquad v'=-\frac{\Omega_r}{a^3}-\frac{\Omega_m}{2a^2}+\Omega_\Lambda a,
+\qquad\chi'=\frac1a.
+\end{equation}
+Its initial positive $v$ is fixed by the Friedmann constraint. Evolving acceleration allows $v$ to pass through zero into contraction. Adaptive RK4 with step doubling and Richardson correction is checked against analytic solutions and independent high-accuracy integration. The default display spans $a_{\rm start}=0.2$ to $a=3$, $a=0.05$ during contraction, or $u=8$, whichever occurs first. These are computational limits.
+
+Matter and radiation are separately conserved ideal fluids, with density scaling as $a^{-3}$ and $a^{-4}$; cosmological-constant density is constant. Matter combines baryons and cold dark matter into one pressureless component. Curvature affects geometry; it is excluded from the material-density composition bar.
+
+A test photon emitted at the first slice has
+\begin{equation}
+\frac{\lambda}{\lambda_{\rm emit}}=\frac{a}{a_{\rm start}},\qquad
+\frac{E}{E_{\rm emit}}=\frac{a_{\rm start}}{a},\qquad E=\frac{hc}{\lambda}.
+\end{equation}
+Multiply $\chi=\int du/a$ by $c/H_{\rm ref}$ to obtain accumulated comoving path length. It is not the full particle horizon or, in a closed geometry, the shortest distance to the emission point. The drawn sinusoid illustrates wavelength; it is not a Maxwell field solution. A bound local apparatus is not automatically stretched by $a(t)$.
+\section{Where more physics would go}
+The Standard Model is a quantum field theory with gauge structure
+\begin{equation}SU(3)_c\times SU(2)_L\times U(1)_Y.\end{equation}
+The strong interaction is associated with $SU(3)_c$. Electromagnetism is the unbroken subgroup after electroweak symmetry breaking. Gravity is described by GR, and quantum mechanics is a framework used by the SM, so these labels are not independent forces to add as one-number axes.
+
+An established low-energy effective-field-theory organization, in units $\hbar=c=1$, is schematically
+\begin{equation}
+S_{\rm eff}=\int d^4x\sqrt{-g}\left[
+\frac{M_{\rm Pl}^2}{2}(R-2\Lambda)+\mathcal L_{\rm SM}
++\alpha R^2+\beta_R R_{\mu\nu}R^{\mu\nu}+\cdots\right].
+\end{equation}
+$M_{\rm Pl}$ is the reduced Planck mass. The dots include further symmetry-allowed curvature and matter operators. This is an organizing framework, not a new equation of this project or a complete high-energy quantum-gravity theory. The demos do not solve this action. Supersymmetry is an optional theoretical extension, not implied by rhetorical opposites.
+
+A sensible next module is linear density growth on the cosmological background, followed by a specified electromagnetic field model. Each extension needs units, constraints, evolution laws and known limiting cases. A finite quantum laboratory, homogeneous cosmos and flat-spacetime coordinate diagram are currently separate experiments; their shared visual language is not a claim of full dynamical unification.
+\section*{References and provenance}
+Concept and visual starting point: Victor. Implementation and explanatory draft developed with AI assistance; corrections and independent checks are welcome. Existing mathematical precedents include state spaces, spacetime foliations and correlation visualizations. No novelty or priority claim is made for the tunnel metaphor.
+\begin{enumerate}
+\item E. Gourgoulhon, \emph{3+1 Formalism and Bases of Numerical Relativity}, \url{https://arxiv.org/abs/gr-qc/0703035}.
+\item Einstein Online, \emph{Spacetime}, \url{https://www.einstein-online.info/en/spacetime/}.
+\item W. K. Wootters, \emph{Entanglement of Formation of an Arbitrary State of Two Qubits}, \url{https://arxiv.org/abs/quant-ph/9709029}.
+\item W. H. Zurek, \emph{Decoherence, einselection, and the quantum origins of the classical}, \url{https://arxiv.org/abs/quant-ph/0105127}.
+\item D. Tong, \emph{Cosmology: The Expanding Universe}, \href{https://davidtong.org/teaching/cosmology/cosmohtml/S1}{Course notes, section 1}.
+\item CERN, \emph{The Standard Model}, \url{https://home.cern/science/physics/standard-model}.
+\item J. F. Donoghue, \emph{Quantum General Relativity and Effective Field Theory}, \url{https://arxiv.org/abs/2211.09902}.
+\end{enumerate}
+\end{document}
