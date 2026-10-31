@@ -8,7 +8,7 @@ This is Victor's fun thought experiment, developed into an educational JavaScrip
 
 ## Try it
 
-Download or clone the repository, then open **`index.html`** in a modern browser. Keep the folder together. The committed pages work offline without installation, an account, a server or runtime network requests. A browser with native MathML support displays the rendered equations; expandable LaTeX source is also included.
+The site is live at <https://mklolbullen.github.io/physinanigans/>. To use it offline, download or clone the repository, then open **`index.html`** in a modern browser. Keep the folder together. The committed pages work offline without installation, an account, a server or runtime network requests. A browser with native MathML support displays the rendered equations; expandable LaTeX source is also included.
 
 Alternatively, run `python3 -m http.server 8000` here and visit <http://localhost:8000>.
 
@@ -90,7 +90,7 @@ tests/ and test_*.py/.cjs       numerical and UI checks
 docs/tunnel-notes.tex           printable mathematical source
 ```
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) before adding a physical layer. The static pages can be served by any ordinary static host; this project does not publish a site automatically.
+See [CONTRIBUTING.md](CONTRIBUTING.md) before adding a physical layer. The static pages can be served by any ordinary static host. A GitHub Actions workflow (`.github/workflows/pages.yml`) publishes the committed pages to GitHub Pages on every push to `main`, after confirming they match their sources.
 
 ## Credit and reuse
 
