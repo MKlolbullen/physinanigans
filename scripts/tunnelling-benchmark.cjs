@@ -37,6 +37,7 @@ function run(E,width,resolution){
    absPacketDifference:Math.abs(transmitted-gaussianAveragedTransmission(k0,sigma0,V,width,m))};
 }
 const results=[];
+console.log('E\twidth\tn\tdt\tT_numeric\tT_plane\tT_packet\tinteraction\tbudget\tseparated');
 for(const E of energies)for(const width of widths)for(const resolution of configs){
  const row=run(E,width,resolution);results.push(row);
  console.log([E,width,resolution.n,resolution.dt,row.numericT.toFixed(5),
