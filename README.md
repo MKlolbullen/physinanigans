@@ -73,6 +73,29 @@ The measured left/right probabilities also include any incoming packet still on 
 
 Run `node --test tests/scattering-validation.test.cjs` to test the probability budget and compare free propagation on two grids against the analytic Gaussian. Norm conservation alone does not demonstrate accuracy: reducing `dx` and `dt` should reduce the numerical error.
 
+## Quantitative tunnelling benchmark
+
+A new reproducible study compares **numerically propagated finite Gaussian wavepackets** with the **exact stationary transmission probability** for a rectangular barrier and with a **Gaussian-momentum-weighted transmission prediction**.
+
+Stationary result for `0 < E < V₀` (with ℏ = 1):
+
+```text
+T(E) = [1 + V₀² sinh²(κ a) / (4E(V₀−E))]⁻¹
+κ = √[2m(V₀−E)]
+```
+
+For `E > V₀`, replace `sinh(κa)` with `sin(qa)`, where `q=√[2m(E−V₀)]`, and replace the denominator factor `V₀−E` with `E−V₀`. At `E=V₀`, use the continuous limit `T=[1+mV₀a²/2]⁻¹`. These formulas hold for the real, time-independent rectangular potential, with equal potentials on the incident and outgoing sides.
+
+A Gaussian packet is **not monochromatic**. The script additionally computes a normalized right-moving Gaussian momentum-weighted prediction. Its finite numerical packet result is the current right-side mass plus absorbed-right mass after evolution. This is an *estimate*, not a certified transmission coefficient; a run is marked `separated` only when a coarse interaction-occupancy/budget check passes. CAP-induced reflections, residual packet tails and finite-difference barrier discretization remain possible errors. The `separated` flag does **not** establish convergence.
+
+```bash
+node scripts/tunnelling-benchmark.cjs --quick
+node scripts/tunnelling-benchmark.cjs --output artifacts/tunnelling-study.json
+node --test tests/barrier-theory.test.cjs
+```
+
+The full benchmark spans several incident central energies and barrier widths at three paired grid/time resolutions. Inspect the `absPacketDifference`, `interaction`, `budget`, `dx`, `dt` and `separated` fields before interpreting trends. Varying spatial and time resolution simultaneously provides a *refinement comparison*, not a separately measured spatial or temporal convergence order. It is deliberately run on demand rather than in the fast CI suite.
+
 ## Three experiments worth trying
 
 1. **Same probabilities, different states.** In the quantum lab, compare the entangled and unentangled 50/50 initial states. Both show equal local excitation probabilities. Only one has nonzero concurrence. Add dephasing to watch that distinction fade.
