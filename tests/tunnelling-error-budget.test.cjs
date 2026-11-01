@@ -1,0 +1,11 @@
+const {test}=require('node:test'),assert=require('node:assert/strict');
+const {analyze}=require('../scripts/tunnelling-error-budget-core.cjs');
+const r=(numericT,interaction=.001,budget=1)=>({numericT,interaction,budget});
+const good=()=>({space:[r(.2),r(.205)],time:[r(.204),r(.205)],absorbers:[r(.202),r(.207)],reference:.21});
+test('independent small variations are only provisional',()=>{const x=analyze(good());assert.equal(x.status,'PROVISIONAL');assert.ok(x.conservativeVariationEnvelope<.01);});
+test('spatial sensitivity flags instability',()=>{const x=good();x.space=[r(.1),r(.3)];assert.equal(analyze(x).status,'NUMERICALLY_SENSITIVE');});
+test('time sensitivity flags instability',()=>{const x=good();x.time=[r(.1),r(.2)];assert.equal(analyze(x).status,'NUMERICALLY_SENSITIVE');});
+test('CAP sensitivity flags instability',()=>{const x=good();x.absorbers=[r(.1),r(.2)];assert.equal(analyze(x).status,'NUMERICALLY_SENSITIVE');});
+test('residual interaction overrides apparent agreement',()=>{const x=good();x.time[0]=r(.204,.2);assert.equal(analyze(x).status,'UNRESOLVED_SCATTERING');});
+test('probability budget overrides apparent agreement',()=>{const x=good();x.space[0]=r(.2,.001,.95);assert.equal(analyze(x).status,'UNRESOLVED_SCATTERING');});
+test('single sample and malformed data rejected',()=>{const x=good();x.space=[r(.2)];assert.throws(()=>analyze(x),RangeError);x.space=[r(.2),r(NaN)];assert.throws(()=>analyze(x),RangeError);});
