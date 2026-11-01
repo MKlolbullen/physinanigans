@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Physinanigans · Gaussian wavepacket</title><link rel="stylesheet" href="assets/app.css">
+<style>body{max-width:1100px;margin:auto;padding:22px;font-family:system-ui;background:#0d1525;color:#e5edf7}a{color:#8bd3ff}header{margin-bottom:32px}h1{font-size:clamp(2rem,5vw,3.5rem)}.controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px}.controls label{display:block}.controls input{display:block;width:100%}canvas{width:100%;height:370px;border:1px solid #3a506b;border-radius:12px;background:#101e31;touch-action:none}.panel{margin:22px 0;padding:20px;border:1px solid #394c64;border-radius:12px}.readout{display:flex;gap:18px;flex-wrap:wrap;font-variant-numeric:tabular-nums}.muted{color:#b5c9da}.legend span{margin-right:24px}.equations{line-height:1.85}code{white-space:normal}</style></head>
+<body><header><nav><a href="index.html">← Tunnel Lab</a> · <a href="quantum.html">Two-qubit quantum lab</a></nav><p class="muted">EXPERIMENT 04 / QUANTUM WAVEFUNCTIONS</p><h1>A particle isn't a little dot.</h1><p>Free evolution of a normalized, one-dimensional Gaussian wavepacket. Drag the time slider to watch position uncertainty grow while the mean travels at constant velocity. All quantities are dimensionless with ℏ = 1.</p></header>
+<section class="panel"><div class="controls">
+<label for="time">Time t <output id="time-value"></output><input id="time" type="range" min="0" max="15" step=".05" value="0"></label>
+<label for="center">Initial center x₀ <output id="center-value"></output><input id="center" type="range" min="-5" max="5" step=".25" value="-3"></label>
+<label for="width">Initial width σ₀ <output id="width-value"></output><input id="width" type="range" min=".35" max="2.5" step=".05" value="1"></label>
+<label for="momentum">Mean wave number k₀ <output id="momentum-value"></output><input id="momentum" type="range" min="-3" max="3" step=".1" value="1.2"></label>
+<label for="mass">Mass m <output id="mass-value"></output><input id="mass" type="range" min=".5" max="4" step=".1" value="1.5"></label>
+</div><p class="muted">Drag the sliders or use arrow keys. The horizontal domain is fixed at x = −20 … 20.</p></section>
+<section class="panel"><h2>Wavefunction</h2><canvas id="plot" role="img" aria-label="Probability density and real and imaginary amplitudes of the wavefunction as functions of position"></canvas><p class="legend"><span style="color:#81eddb">━━ |ψ|² probability density</span><span style="color:#f8bd75">━━ Re ψ</span><span style="color:#b39aff">━━ Im ψ</span></p><div id="readout" class="readout" aria-live="polite"></div></section>
+<section class="panel equations"><h2>What the lines actually mean</h2><p>The packet solves the <strong>free-particle Schrödinger equation</strong>, not a numerical approximation. Its position probability density is Gaussian:</p>
+<p><code>|ψ(x,t)|² = exp(−(x−μ(t))²/(2σ(t)²)) / (√(2π) σ(t))</code></p>
+<p><code>μ(t) = x₀ + (ℏ k₀/m)t</code> and <code>σ(t) = σ₀ √(1 + (ℏ t/(2mσ₀²))²)</code>; ℏ is set to one in the implementation.</p>
+<p>The initial condition is <code>ψ(x,0) = (2πσ₀²)^(-1/4) exp[−(x−x₀)²/(4σ₀²) + ik₀x]</code> up to a physically irrelevant global phase. The displayed complex-amplitude curves are computed from an analytically evolved phase.</p>
+<p><strong>Important:</strong> the plotted density integrates to one over the full real line; a finite viewport may omit tails. The graph illustrates an ideal single nonrelativistic particle in free space, with no potential, measurement or interactions. It is not yet quantum field theory or a model of expanding spacetime.</p></section>
+<script src="wavepacket.js"></script><script>
+(function(){'use strict';const ids=['time','center','width','momentum','mass'];const $=id=>document.getElementById(id),canvas=$('plot'),ctx=canvas.getContext('2d');
+function frame(){const p={time:+$('time').value,x0:+$('center').value,sigma0:+$('width').value,k0:+$('momentum').value,mass:+$('mass').value};for(const id of ids)$(id+'-value').textContent=Number($(id).value).toFixed(2);
+const ratio=devicePixelRatio||1,W=Math.max(280,canvas.clientWidth),H=370;canvas.width=Math.round(W*ratio);canvas.height=Math.round(H*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,W,H);
+const pad=34,xmin=-20,xmax=20,maxY=.72,xx=x=>pad+(x-xmin)/(xmax-xmin)*(W-2*pad),yy=y=>H/2-y/(maxY)*(H/2-pad);
+ctx.strokeStyle='#42556d';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(pad,H/2);ctx.lineTo(W-pad,H/2);ctx.moveTo(pad,pad);ctx.lineTo(pad,H-pad);ctx.stroke();
+for(const [color,key] of [['#81eddb','density'],['#f8bd75','real'],['#b39aff','imag']]){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<=900;i++){const x=xmin+(xmax-xmin)*i/900,y=Wavepacket.evaluate(x,p)[key],px=xx(x),py=yy(y);i?ctx.lineTo(px,py):ctx.moveTo(px,py);}ctx.stroke();}
+ctx.fillStyle='#b5c9da';ctx.font='12px system-ui';ctx.fillText('−20',pad,H-10);ctx.fillText('0',xx(0),H-10);ctx.fillText('20',W-pad-13,H-10);
+const m=Wavepacket.moments(p);$('readout').textContent='⟨x⟩ = '+m.center.toFixed(3)+'   σₓ = '+m.sigma.toFixed(3)+'   ⟨p⟩ = '+m.momentum.toFixed(3)+'   ∫ |ψ|² dx = 1 (analytic)';}
+ids.forEach(id=>$(id).addEventListener('input',frame));window.addEventListener('resize',frame);frame();})();
+</script></body></html>
