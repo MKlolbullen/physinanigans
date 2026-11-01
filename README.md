@@ -53,6 +53,14 @@ Try free propagation, a rectangular barrier, a well or two barriers. Controls se
 
 Run `node --test tests/schrodinger.test.cjs` to verify normalization, approximate free-packet group velocity, boundary behavior and input validation.
 
+### Numerical validation and open boundaries
+
+The scattering laboratory now supports an **optional quartic complex absorbing potential** near both edges. The sink changes the Hamiltonian to a non-Hermitian operator in the absorbing strips: total probability remaining on the grid decreases, while `norm + absorbedLeft + absorbedRight` should remain approximately one. A weighted sink calculation attributes absorbed norm to each side; these values are **not automatically reflection/transmission coefficients**.
+
+The measured left/right probabilities also include any incoming packet still on the original side, and interaction-region probability is monitored separately. To estimate asymptotic reflection and transmission, let the outgoing packets separate from the interaction region and confirm that absorber contamination and wall reflections are negligible. No automatic claim of convergence for these observables is made.
+
+Run `node --test tests/scattering-validation.test.cjs` to test the probability budget and compare free propagation on two grids against the analytic Gaussian. Norm conservation alone does not demonstrate accuracy: reducing `dx` and `dt` should reduce the numerical error.
+
 ## Three experiments worth trying
 
 1. **Same probabilities, different states.** In the quantum lab, compare the entangled and unentangled 50/50 initial states. Both show equal local excitation probabilities. Only one has nonzero concurrence. Add dephasing to watch that distinction fade.
