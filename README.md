@@ -85,6 +85,20 @@ node --test tests/cap-sensitivity.test.cjs
 
 The report includes each sampled numerical transmission estimate, surviving interaction-region mass, tracked probability budget, the spread between estimates and a status of `UNRESOLVED`, `INSUFFICIENT_SENSITIVITY`, `BOUNDARY_SENSITIVE`, or `PROVISIONAL_CAP_STABILITY`. These statuses are **diagnostics**, not physical confidence intervals. Small variation across this tested CAP family is necessary but insufficient for trustworthy asymptotic transmission: discretization, incoming-momentum spread, reflections before absorption and incomplete outgoing-wave separation remain systematic effects.
 
+## Independent tunnelling error-budget diagnostics
+
+The opt-in error-budget experiment varies spatial resolution, time step, and absorbing-boundary strength/width **in separate sweeps** while holding other model parameters fixed.
+
+```bash
+npm run bench:error-budget
+node scripts/tunnelling-error-budget.cjs --output artifacts/error-budget.json
+node --test tests/tunnelling-error-budget.test.cjs
+```
+
+The JSON report includes each raw simulation, probability budget, surviving interaction-region mass, Gaussian-momentum-weighted stationary reference, and a summary. The summary shows independent spreads in transmitted probability under spatial, temporal and boundary-absorber variation.
+
+The `PROVISIONAL` state means only that this finite family of settings has limited variation under hardcoded diagnostic thresholds. It is **not** a certified uncertainty bound or measured convergence order. Errors are correlated, so the report deliberately does not add the spreads in quadrature. Incomplete wavepacket separation or probability-budget failure marks the result unresolved, regardless of apparent agreement.
+
 ## Quantitative tunnelling benchmark
 
 ### Convergence classification
