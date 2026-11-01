@@ -75,6 +75,19 @@ Run `node --test tests/scattering-validation.test.cjs` to test the probability b
 
 ## Quantitative tunnelling benchmark
 
+### Convergence classification
+
+The tunnelling benchmark exports a `convergence` array grouped by incident energy and barrier width. It reports differences between successive grid/time refinements and assigns one of four honest statuses:
+
+- `UNRESOLVED_PACKET_OR_BUDGET`: interaction-region occupancy or probability accounting exceeds tolerance.
+- `INSUFFICIENT_REFINEMENT`: fewer than two discretizations.
+- `NOT_CONVERGED`: substantial change between the two finest numerical estimates.
+- `PROVISIONAL`: the quick checks pass, but no independent absorber-strength, barrier-grid or asymptotic flux validation is implied.
+
+**Caution:** refined grid spacing and timestep vary together. A small adjacent-grid difference is not sufficient to establish an asymptotic convergence order or accurate transmission.
+
+
+
 A new reproducible study compares **numerically propagated finite Gaussian wavepackets** with the **exact stationary transmission probability** for a rectangular barrier and with a **Gaussian-momentum-weighted transmission prediction**.
 
 Stationary result for `0 < E < V₀` (with ℏ = 1):
