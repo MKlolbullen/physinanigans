@@ -6,9 +6,12 @@
   "scripts": {
     "build": "python3 build.py && node scripts/render-math.cjs",
     "start": "python3 -m http.server 8000",
-    "test": "node --test tests/relativity.test.cjs && node test_browser.cjs && node test_cosmology_browser.cjs",
-    "test:physics": "python3 -m unittest -v test_model test_cosmology",
+    "test": "node --test tests/relativity.test.cjs && node test_browser.cjs && node test_cosmology_browser.cjs && node --test tests/wavepacket.test.cjs",
+    "test:physics": "python3 -m unittest -v test_model test_cosmology test_wavepacket",
     "test:ui": "node tests/browser.cjs"
   },
-  "devDependencies": {"katex": "0.18.2", "playwright": "1.56.1"}
+  "devDependencies": {
+    "katex": "0.18.2",
+    "playwright": "1.56.1"
+  }
 }
