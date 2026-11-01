@@ -24,6 +24,32 @@ class CosmologyTests(unittest.TestCase):
                 else: a=a0+t;chi=math.log(a/a0)
                 np.testing.assert_allclose([s['a'],s['chi']],[a,chi],rtol=2e-8,atol=2e-9)
 
+    def test_linear_growth_closed_forms(self):
+        # Growing mode delta=1, delta'=H at the start; closed forms follow from delta''+2H delta'=(3/2)(m/a^3)delta.
+        a0=.2
+        for name in ['matter','radiation','vacuum','empty']:
+            run=simulate(**PRESETS[name])
+            for t in np.linspace(0,run['end'],23):
+                s=sample(run,float(t));a=s['a']
+                if name=='matter': delta=a/a0;rate=1
+                elif name=='radiation': delta=1+math.log(a/a0);rate=1/delta
+                elif name=='vacuum': delta=1+(1-math.exp(-2*t))/2;rate=math.exp(-2*t)/delta
+                else: delta=2-a0/a;rate=a0/(a*delta)
+                np.testing.assert_allclose([s['growth'],s['growthRate']],[delta,rate],rtol=2e-8,atol=2e-9)
+
+    def test_growth_rate_against_linder_fit(self):
+        # f = dln(delta)/dln(a) tracks Omega_m(a)^0.55 to about a percent in flat matter+Lambda (Linder 2005).
+        run=simulate(m=.3,r=0,l=.7)
+        checked=0
+        for t in np.linspace(0,run['end'],60):
+            s=sample(run,float(t))
+            if .4<s['a']<1.1:
+                self.assertAlmostEqual(s['growthRate'],s['fractions'][0]**.55,delta=.012);checked+=1
+        self.assertGreater(checked,5)
+        late=sample(run,run['end']);self.assertLess(late['growthRate'],.15,'Lambda should suppress growth')
+        turn=simulate(**PRESETS['closed'])['turns'][0]
+        self.assertIsNone(sample(simulate(**PRESETS['closed']),turn['t'])['growthRate'])
+
     def test_closed_solution_through_turnaround(self):
         run=simulate(**PRESETS['closed'])
         eta0=math.acos(1-run['p']['aStart']); offset=eta0-math.sin(eta0)
@@ -40,13 +66,14 @@ class CosmologyTests(unittest.TestCase):
         for values in [dict(m=.3,r=.0001,l=.6999),dict(m=1.2,r=.4,l=.05),dict(m=.2,r=.5,l=.7)]:
             run=simulate(**values);m,r,l=values.values();k=1-m-r-l
             def rhs(t,y):
-                a,v,chi=y
-                return [v,-r/a**3-m/(2*a**2)+l*a,1/a]
-            ref=solve_ivp(rhs,[0,run['end']],[.2,math.sqrt(r/.2**2+m/.2+k+l*.2**2),0],method='DOP853',rtol=2e-12,atol=2e-13,dense_output=True)
+                a,v,chi,d,dd=y
+                return [v,-r/a**3-m/(2*a**2)+l*a,1/a,dd,-2*v/a*dd+1.5*m/a**3*d]
+            v0=math.sqrt(r/.2**2+m/.2+k+l*.2**2)
+            ref=solve_ivp(rhs,[0,run['end']],[.2,v0,0,1,v0/.2],method='DOP853',rtol=2e-12,atol=2e-13,dense_output=True)
             self.assertTrue(ref.success)
             for t in np.linspace(0,run['end'],25):
                 s=sample(run,float(t))
-                np.testing.assert_allclose([s['a'],s['v'],s['chi']],ref.sol(t),rtol=1e-7,atol=2e-8)
+                np.testing.assert_allclose([s['a'],s['v'],s['chi'],s['growth']],ref.sol(t)[:4],rtol=1e-7,atol=2e-8)
 
     def test_friedmann_constraint_across_parameter_corners(self):
         for m in [0,.3,2]:
@@ -90,7 +117,7 @@ class CosmologyTests(unittest.TestCase):
             run=simulate(**PRESETS[case['name']]);self.assertAlmostEqual(run['end'],case['end'],places=8)
             for f,actual in zip([0,.25,.5,.75,1],case['states']):
                 expected=sample(run,run['end']*f)
-                for key in ['a','v','chi','H','photonEnergy','wavelength']:
+                for key in ['a','v','chi','H','photonEnergy','wavelength','growth']:
                     self.assertAlmostEqual(expected[key],actual[key],places=8)
 
 

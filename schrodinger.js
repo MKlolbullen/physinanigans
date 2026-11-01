@@ -11,8 +11,8 @@ function create(opts={}){
  const {n=401,xmin=-30,xmax=30,mass=1,dt=.02,x0=-12,sigma0=1.5,k0=2,potentialType='free',height=3,width=2,absorber=false,absorbFraction=0.18,absorbStrength=1.2}=opts;
  if(!Number.isInteger(n)||n<5||n>2001||![xmin,xmax,mass,dt,x0,sigma0,k0,height,width].every(Number.isFinite)||xmax<=xmin||mass<=0||dt<=0||dt>.25||sigma0<=0||typeof absorber!=='boolean'||!Number.isFinite(absorbFraction)||absorbFraction<=0||absorbFraction>=.4||!Number.isFinite(absorbStrength)||absorbStrength<0)throw RangeError('Invalid grid/packet parameters');
  const dx=(xmax-xmin)/(n-1),x=Array.from({length:n},(_,i)=>xmin+i*dx),V=x.map(z=>potential(z,potentialType,height,width));
- let re=x.map(z=>Math.exp(-(z-x0)**2/(4*sigma0*sigma0))*Math.cos(k0*(z-x0)));
- let im=x.map(z=>Math.exp(-(z-x0)**2/(4*sigma0*sigma0))*Math.sin(k0*(z-x0)));re[0]=re[n-1]=im[0]=im[n-1]=0;
+ let re=x.map(z=>Math.exp(-((z-x0)**2)/(4*sigma0*sigma0))*Math.cos(k0*(z-x0)));
+ let im=x.map(z=>Math.exp(-((z-x0)**2)/(4*sigma0*sigma0))*Math.sin(k0*(z-x0)));re[0]=re[n-1]=im[0]=im[n-1]=0;
  let norm=Math.sqrt(dx*re.reduce((s,z,i)=>s+z*z+im[i]*im[i],0));if(norm<1e-20)throw RangeError('Initial packet is outside computational domain');re=re.map(v=>v/norm);im=im.map(v=>v/norm);
  const depth=(xmax-xmin)*absorbFraction;
  const W=x.map(z=>{if(!absorber)return 0;const d=Math.min(z-xmin,xmax-z);const q=Math.max(0,(depth-d)/depth);return absorbStrength*q*q*q*q;});

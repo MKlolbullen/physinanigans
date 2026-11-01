@@ -1,5 +1,9 @@
 # Validation record
 
+## Linear growth of structure — 1 November 2026
+
+The cosmology engines gained a linear matter overdensity integrated alongside the scale factor. `test_cosmology.py` checks it against the exact closed forms for the four single-component backgrounds (delta = a/a_start, 1 + ln(a/a_start), 1 + (1 − e^{−2u})/2 and 2 − a_start/a) to 2e-8 relative, against an independent DOP853 integration of the five-variable system for three mixed backgrounds, and against the Linder Omega_m(a)^0.55 growth-rate fit to 0.012 absolute between a = 0.4 and a = 1.1 in flat matter + Lambda. The JavaScript/Python parity check includes the growth factor. The growth rate is reported as undefined at a turning point. What these checks do not establish: accuracy of the growing-mode initial condition when radiation is not negligible at a_start, and anything beyond a single linear amplitude.
+
 ## Repository edition 1.0 — 31 October 2026
 
 Passed in this build:

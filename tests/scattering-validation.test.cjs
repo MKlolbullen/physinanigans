@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const S=require('../schrodinger.js');
 function config(n,dt,extra={}){return {n,xmin:-30,xmax:30,mass:1,dt,x0:-10,sigma0:1.5,k0:1.5,potentialType:'free',...extra};}
-function analyticDensity(x,t,p){const center=p.x0+p.k0*t/p.mass,u=t/(2*p.mass*p.sigma0*p.sigma0),sigma=p.sigma0*Math.hypot(1,u);return Math.exp(-((x-center)/sigma)**2/2)/(Math.sqrt(2*Math.PI)*sigma);}
+function analyticDensity(x,t,p){const center=p.x0+p.k0*t/p.mass,u=t/(2*p.mass*p.sigma0*p.sigma0),sigma=p.sigma0*Math.hypot(1,u);return Math.exp(-(((x-center)/sigma)**2)/2)/(Math.sqrt(2*Math.PI)*sigma);}
 function l1Error(q,p){let sum=0;for(let i=0;i<q.x.length;i++)sum+=Math.abs(q.density[i]-analyticDensity(q.x[i],q.t,p))*q.dx;return sum;}
 test('free evolution converges toward continuum Gaussian density under spatial/time refinement',()=>{
   const coarse=config(301,.02),fine=config(601,.005);
