@@ -16,26 +16,38 @@ Alternatively, run `python3 -m http.server 8000` here and visit <http://localhos
 |---|---|---|
 | `wavepacket.html` | Change time, width, momentum, mass and initial position | Exact free Gaussian wavepacket evolution: probability density, complex amplitude, center and spreading |
 | `quantum.html` | Drag the time slice; change the initial state, coupling, dephasing or clock | Analytic two-qubit exchange plus Lindblad dephasing; SR and static Schwarzschild clock comparisons |
-| `expansion.html` | Drag cosmic time; vary matter, radiation and Λ | Adaptive FLRW evolution, including recollapse, density scaling and test-photon redshift |
+| `expansion.html` | Drag cosmic time; vary matter, radiation and Λ | Adaptive FLRW evolution, including recollapse, density scaling, test-photon redshift and linear growth of a matter overdensity |
+| `scattering.html` | Choose a potential; set barrier height/width, wave number and packet width | Crank–Nicolson time-dependent Schrödinger evolution with optional absorbing boundaries |
 | `relativity.html` | Drag the observer or simultaneity slice | Lorentz transformations, relative simultaneity and invariant intervals |
 | `guide.html` | Expand an equation's LaTeX source | Plain-language connections to the Standard Model, GR and state spaces |
 
 Every draggable has a native slider for keyboard use. There is no required animation or autoplay.
 
+| Expansion: a growing universe with a stretching photon | Relativity: a boosted observer's slice of “now” |
+|---|---|
+| ![Expansion diagram showing a widening tunnel and a redshifted photon](assets/expansion.png) | ![Spacetime diagram with a tilted simultaneity slice](assets/relativity.png) |
+
 ## The idea in one equation
 
 A schematic record of a slice, within a suitable classical-geometry/quantum-matter approximation, is
 
-```MathML
 $$
 \mathcal U_t=(\Sigma_t,h_{ij},K_{ij},\rho_t),\qquad\mathcal T=\{\mathcal U_t:t\in I\}.
 $$
-```
 
 Here $\Sigma_t$ is three-dimensional space at a chosen time label, $h_{ij}$ its spatial geometry, $K_{ij}$ its extrinsic curvature and $\rho_t$ the retained quantum state. This is a way to organize data; equations of motion and constraints still have to be supplied. Classical field models store field values and conjugate momenta instead. A global stack of slices needs suitable spacetime assumptions.
 
-
 The wall shows selected observables. Interior lines show relationships such as entanglement. The interior is not extra physical space or a signal channel. “More dimensions” means more independent state information, not additional directions in the room. The relativity experiment shows explicitly that a chosen stack of slices is not a universal present.
+
+## New: linear growth of structure
+
+A smooth universe cannot make a cosmic web. The expansion lab now carries one small, pressureless matter overdensity δ on the evolving background and integrates
+
+$$
+\ddot\delta+2H\dot\delta=\tfrac32 H_{\mathrm{ref}}^2\,\frac{\Omega_m}{a^3}\,\delta
+$$
+
+in the same adaptive step as a(t). The slice readout shows the growth factor and the growth rate f = d ln δ / d ln a: exactly 1 under matter domination, falling toward 0 once Λ takes over, and undefined at a recollapse turnaround. Checks compare against closed forms in the four single-component universes, an independent DOP853 integration, and the Ωₘ(a)^0.55 fit of Linder (2005). It is a single linear amplitude per slice, not a spatial field; see [COSMOLOGY.md](COSMOLOGY.md).
 
 ## New: Gaussian wavepacket laboratory
 
@@ -65,15 +77,16 @@ Run `node --test tests/scattering-validation.test.cjs` to test the probability b
 
 1. **Same probabilities, different states.** In the quantum lab, compare the entangled and unentangled 50/50 initial states. Both show equal local excitation probabilities. Only one has nonzero concurrence. Add dephasing to watch that distinction fade.
 2. **A universe that turns around.** Choose “Closed universe · recollapse” in Expansion. Drag past the widest slice and follow contraction. A sufficiently late photon can become more energetic than it was at emission.
-3. **Change who calls two events simultaneous.** In Relativity, set velocity to zero, then drag the observer to β=0.6. Events A and B keep their locations in the original diagram but acquire moving-frame times +0.75 and −0.75.
+3. **Watch Λ switch structure growth off.** In Expansion, pick “Matter only”: the growth rate f stays at 1.000 while the overdensity grows in step with a. Switch to the mixed preset and drag toward late times; f sinks below 0.1 as the cosmological constant dilutes matter faster than gravity can gather it.
+4. **Change who calls two events simultaneous.** In Relativity, set velocity to zero, then drag the observer to β=0.6. Events A and B keep their locations in the original diagram but acquire moving-frame times +0.75 and −0.75.
 
-These are three scoped demonstrations. The qubit exchange coupling is not arbitrarily changed by cosmic expansion. Full Standard Model interactions, nonlinear structure formation and quantum gravity are described as extensions, not claimed as implemented.
+These are four scoped demonstrations. The qubit exchange coupling is not arbitrarily changed by cosmic expansion. Full Standard Model interactions, nonlinear structure formation and quantum gravity are described as extensions, not claimed as implemented.
 
 ## Mathematics and reading
 
-- [Field notes](templates/guide.html) — HTML source for the plain-language guide; open `guide.html` in a browser.
+- [Field notes](guide.html) — the plain-language guide; open it in a browser.
 - [MODEL.md](MODEL.md) — quantum dynamics, assumptions, state-space architecture and sources.
-- [COSMOLOGY.md](COSMOLOGY.md) — Friedmann equations, units, redshift and numerical method.
+- [COSMOLOGY.md](COSMOLOGY.md) — Friedmann equations, units, redshift, linear growth and numerical method.
 - [RELATIVITY.md](RELATIVITY.md) — Lorentz transformations and the draggable coordinate diagram.
 - [LaTeX document](docs/tunnel-notes.tex) — self-contained mathematical notes; compile with `pdflatex tunnel-notes.tex` in `docs/`.
 - [ROADMAP.md](ROADMAP.md) — where electromagnetism, strong/weak interactions, structure and other layers could fit.
@@ -106,12 +119,13 @@ The physics suite compares quantum evolution with an independent full Lindblad m
 
 ```text
 model.js / model.py             quantum engines
-cosmology.js / cosmology.py     FLRW engines
+cosmology.js / cosmology.py     FLRW engines with linear growth
+wavepacket.js / schrodinger.js  analytic Gaussian packet and Crank–Nicolson solver
 relativity.js                  pure Lorentz-transform functions
 assets/drag.js                 pointer interaction helper
 *-fragment.template.html       quantum and cosmology UI sources
 templates/                     page sources and relativity UI
-assets/                        CSS and original SVG illustration
+assets/                        CSS, original SVG illustration and screenshots
 build.py                       page assembly
 scripts/render-math.cjs         LaTeX → MathML
 tests/ and test_*.py/.cjs       numerical and UI checks

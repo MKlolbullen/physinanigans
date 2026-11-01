@@ -43,6 +43,7 @@
   <p class="drag-hint">↔ Drag across the tunnel to choose a slice. The slider also works with arrow keys.</p>
   <svg class="cosmo-diagram" id="ct-diagram" role="img" aria-labelledby="ct-title ct-desc"></svg>
   <div class="cosmo-stats tabular-nums" id="ct-stats" aria-live="polite" aria-atomic="true"></div>
+  <p class="text-small subtle">The overdensity figures follow one small, linear, pressureless matter perturbation riding on this background: Hubble friction slows it, self-gravity feeds it, and f = d ln δ / d ln a is 1 for matter domination and falls toward 0 under Λ. It is a single amplitude per slice, not a map of structure.</p>
   <div class="text-small">Energy-density shares at this slice</div>
   <div class="cosmo-bar" role="img" id="ct-composition" aria-label="Energy-density composition"></div>
   <div class="cosmo-key text-small" id="ct-legend"></div>
@@ -73,7 +74,7 @@
       el('ct-phase').textContent=Math.abs(s.v)<1e-5?'Turning around':s.v<0?'Contracting':s.acceleration>0?'Expanding · accelerating':'Expanding · decelerating';
       el('ct-curvature').textContent='Curvature Ωₖ = '+format(run.p.k);
       el('ct-stats').replaceChildren();
-      for(const label of ['Scale a = '+format(s.a),'Photon energy ×'+format(s.photonEnergy),'Light path χ = '+format(s.chi)]){
+      for(const label of ['Scale a = '+format(s.a),'Photon energy ×'+format(s.photonEnergy),'Light path χ = '+format(s.chi),'Overdensity growth ×'+format(s.growth),'Growth rate f = '+(s.growthRate===null?'undefined':format(s.growthRate))]){
         const span=document.createElement('span');span.textContent=label;el('ct-stats').appendChild(span);
       }
       const names=['Matter','Radiation','Λ'];el('ct-composition').replaceChildren();el('ct-legend').replaceChildren();

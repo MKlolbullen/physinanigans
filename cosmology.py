@@ -1,4 +1,5 @@
-"""FLRW background: matter, radiation, Lambda, curvature, test-photon transport.
+"""FLRW background: matter, radiation, Lambda, curvature, test-photon transport,
+and linear subhorizon growth of a pressureless matter overdensity delta.
 
 Dependency-free reference engine. Run to emit the default history as CSV.
 """
@@ -27,8 +28,8 @@ def parameters(**kwargs):
 
 
 def derivative(y,p):
-    a,v,_=y
-    return [v,-p['r']/a**3-p['m']/(2*a**2)+p['l']*a,1/a]
+    a,v,_,d,dd=y
+    return [v,-p['r']/a**3-p['m']/(2*a**2)+p['l']*a,1/a,dd,-2*(v/a)*dd+1.5*p['m']/a**3*d]
 
 
 def rk4(y,h,p):
@@ -56,7 +57,8 @@ def boundary(y,h,p,index,target):
 
 def simulate(**kwargs):
     p=parameters(**kwargs)
-    t,y,h=0.,[p['aStart'],math.sqrt(friedmann(p['aStart'],p)),0.],.001
+    v0=math.sqrt(friedmann(p['aStart'],p))
+    t,y,h=0.,[p['aStart'],v0,0.,1.,v0/p['aStart']],.001
     rows,turns=[dict(t=t,y=y[:])],[]
     reason,max_residual='time limit',0.
     for _ in range(200000):
@@ -99,19 +101,20 @@ def sample(run,t):
         if rows[mid]['t']<=t: lo=mid
         else: hi=mid
     y=advance(rows[lo]['y'],t-rows[lo]['t'],p)
-    a,v,chi=y
+    a,v,chi,delta,delta_dot=y
     matter,radiation,vacuum=p['m']/a**3,p['r']/a**4,p['l']
     total=matter+radiation+vacuum
     return dict(t=t,a=a,v=v,chi=chi,H=v/a,acceleration=derivative(y,p)[1],wavelength=a/p['aStart'],
                 photonEnergy=p['aStart']/a,temperature=p['aStart']/a if p['r']>0 else None,
                 density=dict(matter=matter,radiation=radiation,vacuum=vacuum),
                 fractions=[matter/total,radiation/total,vacuum/total] if total>0 else [0,0,0],
-                comovingVolumeMass=matter*a**3,curvature=p['k'])
+                comovingVolumeMass=matter*a**3,curvature=p['k'],
+                growth=delta,growthRate=delta_dot*a/(v*delta) if abs(v)>1e-12 else None)
 
 
 if __name__=='__main__':
     run=simulate()
-    writer=csv.DictWriter(sys.stdout,fieldnames=['t','a','H','wavelength','photonEnergy','chi'])
+    writer=csv.DictWriter(sys.stdout,fieldnames=['t','a','H','wavelength','photonEnergy','chi','growth'])
     writer.writeheader()
     for i in range(501):
         s=sample(run,run['end']*i/500)

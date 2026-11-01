@@ -1,6 +1,6 @@
 # An evolving tunnel: version 0.2
 
-The quantum lab from version 0.1 remains at `quantum.html`. The new `expansion.html` follows the large-scale geometry of a homogeneous, isotropic universe. Its dynamical state is (a, v, chi): scale factor, scale-factor velocity and accumulated comoving photon path length.
+The quantum lab from version 0.1 remains at `quantum.html`. The new `expansion.html` follows the large-scale geometry of a homogeneous, isotropic universe. Its dynamical state is (a, v, chi, delta, delta'): scale factor, scale-factor velocity, accumulated comoving photon path length, and a linear matter overdensity with its time derivative.
 
 ## A concrete connection between layers
 
@@ -85,21 +85,35 @@ For a freely redshifting ideal blackbody bath with fixed relativistic species, T
 
 The sinusoid is a snapshot illustration of wavelength on a fixed display length scale. Its amplitude is held fixed for visibility; amplitude, polarization, interference, electromagnetic field energy transfer and full Maxwell dynamics are not solved by that line.
 
+## Linear growth of structure
+
+A smooth universe cannot form a cosmic web. The first step toward structure is a small fractional matter overdensity delta = (rho_m − rho̅_m)/rho̅_m carried on the evolving background. In the pressureless, subhorizon, Newtonian-limit linear regime it obeys
+
+$$
+\ddot\delta+2H\dot\delta=4\pi G\bar\rho_m\,\delta=\tfrac32 H_{\mathrm{ref}}^2\,\frac{\Omega_m}{a^3}\,\delta .
+$$
+
+Hubble friction 2H delta' slows growth; self-gravity drives it. The engine integrates this equation in the same adaptive step as a(t), so the perturbation always sees the exact computed background rather than a fitted one. The initial condition at a_start is delta = 1, delta' = H, the growing mode of a matter-dominated universe; with the default ingredients, Omega_m(a_start) ≈ 0.98, so the decaying-mode admixture is small and shrinks. The reported quantities are the growth factor delta/delta_start and the growth rate f = d ln delta / d ln a = delta' a/(v delta), undefined at a turning point where v = 0.
+
+Closed forms used as checks: matter only, delta = a/a_start and f = 1; radiation only (matter absent, so only friction acts), delta = 1 + ln(a/a_start); cosmological constant only, delta = 1 + (1 − e^{−2u})/2; empty, delta = 2 − a_start/a. For flat matter + Lambda the rate tracks Omega_m(a)^0.55 to about one percent over the tested range (Linder 2005). Radiation perturbations, pressure, baryon–photon coupling, horizon-scale relativistic corrections and the nonlinear regime are not modeled: delta is a single number per slice, not a field with a spatial power spectrum.
+
 ## Numerical method and domain
 
 JavaScript and dependency-free Python engines implement adaptive RK4 step doubling with Richardson correction. A local error estimate controls step size. Root refinement locates scale-limit crossings and records the expansion-to-contraction turning point. Sampling integrates a short step from the preceding stored state rather than merely interpolating a coarse picture.
 
 The default history begins at a = 0.2 and stops at a = 3, a = 0.05 on the contracting branch, or u = 8. These finite cutoffs are computational display boundaries, not claimed beginnings or endings of physics. The solver does not step through a = 0.
 
-The code monitors the normalized Friedmann-constraint residual. Tests compare against exact matter, radiation, vacuum and empty solutions; the exact parametric closed dust solution; and an independently configured DOP853 integration for mixed fluids. They also verify density scalings, light-path integrals, end conditions and JavaScript/Python agreement.
+The code monitors the normalized Friedmann-constraint residual. Tests compare against exact matter, radiation, vacuum and empty solutions; the exact parametric closed dust solution; and an independently configured DOP853 integration for mixed fluids. They also verify density scalings, light-path integrals, closed-form linear growth in single-component backgrounds, the Linder growth-rate fit, end conditions and JavaScript/Python agreement.
 
 ## Scope of this layer
 
-This is dynamical GR within a homogeneous, isotropic symmetry reduction. There are no density perturbations, galaxies, local gravitational collapse, field collisions, recombination, changing particle species, inflaton evolution or reheating yet. The matter fluid leaves the microscopic identity of dark matter unspecified. Lambda is a specified constant, not a derivation of vacuum energy from quantum field theory.
+This is dynamical GR within a homogeneous, isotropic symmetry reduction. Perturbations enter only as one linear, pressureless, subhorizon overdensity amplitude. There are no spatial perturbation fields, galaxies, local gravitational collapse, field collisions, recombination, changing particle species, inflaton evolution or reheating yet. The matter fluid leaves the microscopic identity of dark matter unspecified. Lambda is a specified constant, not a derivation of vacuum energy from quantum field theory.
 
 ## Primary teaching sources
 
 - David Tong, **Cosmology, 1: The Expanding Universe**. Geometry, Friedmann and continuity equations, density laws, redshift and analytic cosmologies: https://davidtong.org/teaching/cosmology/cosmohtml/S1
 - Edward L. Wright, **Cosmology Tutorial, Part 2**. Scale factor, comoving motion, redshift and cosmic time: https://www.astro.ucla.edu/~wright/cosmo_02.htm
+- David Tong, **Cosmology, 3: Structure Formation**. Linear growth equation, Hubble friction and growing/decaying modes: https://davidtong.org/teaching/cosmology/cosmohtml/S3
+- Eric V. Linder, **Cosmic growth history and expansion history**, Phys. Rev. D 72, 043529 (2005). The f ≈ Omega_m(a)^0.55 parametrization: https://arxiv.org/abs/astro-ph/0507263
 
 The equations are established; the tunnel is the project's visual organization of their evolving state.

@@ -7,7 +7,7 @@ The aim is to grow one inspectable state-and-history framework. Each added layer
 | Three-dimensional space and time | Geometry, locations and histories | 3D site metadata; FLRW geometry and cosmic time | Compare comoving and proper separations |
 | Local quantum state | Amplitudes, mixtures, entanglement and measurements | Two coupled qubits with dephasing | Add measurements in several bases and joint correlations |
 | SR and GR clocks | Relate local proper time to coordinates | Inertial SR and static Schwarzschild clock comparisons; draggable Lorentz slices | Move a small quantum clock along a specified worldline |
-| Dynamical large-scale gravity | Contents determine expansion | Matter/radiation/Lambda FLRW evolution, including recollapse | Perturb the homogeneous density and watch structure grow |
+| Dynamical large-scale gravity | Contents determine expansion | Matter/radiation/Lambda FLRW evolution, including recollapse; linear growth of one matter overdensity on that background | Promote delta to a spatial field with a power spectrum and follow mode-by-mode growth |
 | Light | Causal propagation, redshift and photon energy | Radial accumulated null path and wavelength/energy scaling | Add source/observer events and arrival times |
 | Electromagnetic fields | Electric and magnetic fields, charges and currents | Photon kinematics only | Evolve a Maxwell wave packet, then couple charges |
 | Matter and dark matter | Dynamical sources and particle content | One effective pressureless component | Split baryons and cold dark matter, then add interactions |
@@ -20,8 +20,8 @@ The aim is to grow one inspectable state-and-history framework. Each added layer
 
 ## Next integration step
 
-Add **small density perturbations** to the evolving background. A smooth universe expands but cannot form a cosmic web. In the pressureless, subhorizon linear regime, an overdensity delta has a growth equation involving the background expansion and matter density. Solving it against the existing a(t) gives a direct connection between expansion history and emerging structure.
+Done: a **linear matter overdensity** now rides on the evolving background. In the pressureless, subhorizon regime its growth equation involves only the background expansion and matter density, and solving it against the computed a(t) ties expansion history to emerging structure (see [COSMOLOGY.md](COSMOLOGY.md)). The result is one amplitude per slice. Natural follow-ups are a decomposition into comoving Fourier modes with a chosen initial spectrum, baryon pressure and the radiation-era suppression of growth inside the horizon.
 
-After that, add **spatial fields and local causality**: a small periodic 3D domain with explicit units, wave propagation and particle/field coupling. The state stored on a time slice then becomes an actual spatial field dataset rather than a few uniform variables.
+Next, add **spatial fields and local causality**: a small periodic 3D domain with explicit units, wave propagation and particle/field coupling. The state stored on a time slice then becomes an actual spatial field dataset rather than a few uniform variables.
 
 The tunnel view can continue to summarize each slice while a selected slice opens into its own spatial or quantum-state view. That allows the visual language to remain stable while the physics grows more detailed.

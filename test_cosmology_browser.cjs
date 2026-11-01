@@ -16,14 +16,17 @@ const defaults={'ct-preset':'mixed','ct-matter':'.3','ct-radiation':'.0001','ct-
 for(const [id,v] of Object.entries(defaults))ids.get(id).value=v;
 vm.runInNewContext(script,{document:{getElementById:id=>ids.get(id),createElement:tag=>new Element(tag),createElementNS:(ns,tag)=>new Element(tag)},console,Math,Number,JSON},{timeout:5000});
 const change=(id,v)=>{const e=ids.get(id);e.value=String(v);e.events.input();assert.equal(ids.get('ct-error').hidden,true,ids.get('ct-error').textContent);};
-const state=()=>JSON.parse(root.dataset.state);
+const state=()=>JSON.parse(root.dataset.state),stats=()=>ids.get('ct-stats').children.map(c=>c.textContent).join(' | ');
 assert.ok(state().a>.2);assert.ok(state().photonEnergy<1);
 for(const name of ['mixed','matter','radiation','closed','vacuum','empty']){
   change('ct-preset',name);change('ct-time',0);assert.ok(Math.abs(state().a-.2)<1e-12);
   change('ct-time',1000);assert.ok(Math.abs(state().a-(name==='closed'?.05:3))<1e-8);
   if(name==='closed'){assert.ok(state().v<0);assert.match(ids.get('ct-phase').textContent,/Contracting/);assert.ok(state().photonEnergy>1);}
   if(name==='empty')assert.match(ids.get('ct-legend').textContent,/Empty/);
+  if(name==='matter'){assert.ok(Math.abs(state().growth-15)<1e-7);assert.ok(Math.abs(state().growthRate-1)<1e-7);}
+  assert.match(stats(),/Overdensity growth ×/);
 }
+change('ct-preset','closed');change('ct-time',0);assert.match(stats(),/Growth rate f = 1\.000/);
 change('ct-preset','mixed');change('ct-matter',.5);assert.equal(ids.get('ct-preset').value,'custom');
 change('ct-radiation',.2);change('ct-lambda',.3);assert.ok(Math.abs(state().curvature)<1e-12);
 const serialize=n=>`<${n.tag} ${Object.entries(n.attrs).map(([k,v])=>`${k}="${v}"`).join(' ')}>${n.textContent.replaceAll('&','&amp;').replaceAll('<','&lt;')}${n.children.map(serialize).join('')}</${n.tag}>`;
