@@ -5,6 +5,7 @@
 const fs=require('node:fs'),path=require('node:path');
 const {create}=require('../schrodinger.js');
 const {transmission,gaussianAveragedTransmission}=require('../barrier-theory.js');
+const {summarize}=require('./tunnelling-convergence.cjs');
 const args=process.argv.slice(2);
 if(args.includes('--help')){console.log('Usage: node scripts/tunnelling-benchmark.cjs [--quick] [--output FILE.json]');process.exit(0);}
 const quick=args.includes('--quick'),outIndex=args.indexOf('--output');
@@ -45,5 +46,5 @@ for(const E of energies)for(const width of widths)for(const resolution of config
  row.interaction.toFixed(4),row.budget.toFixed(6),row.separated?'yes':'NO'].join('\t'));
 }
 console.log('E\twidth\tn\tdt\tT_numeric\tT_plane\tT_packet\tinteraction\tbudget\tseparated');
-if(output){fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify({model:'1D finite-difference CN + quartic CAP',hbar:1,m,V,sigma0,x0,results},null,2)+'\n');console.log('Wrote '+output);}
+if(output){fs.mkdirSync(path.dirname(output),{recursive:true});fs.writeFileSync(output,JSON.stringify({model:'1D finite-difference CN + quartic CAP',hbar:1,m,V,sigma0,x0,results,convergence},null,2)+'\n');console.log('Wrote '+output);}
 if(results.some(r=>Math.abs(r.budget-1)>.003))process.exitCode=1;

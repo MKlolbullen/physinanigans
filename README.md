@@ -73,7 +73,32 @@ The measured left/right probabilities also include any incoming packet still on 
 
 Run `node --test tests/scattering-validation.test.cjs` to test the probability budget and compare free propagation on two grids against the analytic Gaussian. Norm conservation alone does not demonstrate accuracy: reducing `dx` and `dt` should reduce the numerical error.
 
+## Absorbing-boundary sensitivity study
+
+The numerical transmission estimate depends on the complex absorbing potential (CAP) near grid edges. An opt-in sensitivity sweep independently varies **absorber strength** and **absorbing-strip width** while keeping the wavepacket, rectangular barrier, grid and time step fixed.
+
+```bash
+npm run bench:cap
+node scripts/cap-sensitivity.cjs --output artifacts/cap-sensitivity.json
+node --test tests/cap-sensitivity.test.cjs
+```
+
+The report includes each sampled numerical transmission estimate, surviving interaction-region mass, tracked probability budget, the spread between estimates and a status of `UNRESOLVED`, `INSUFFICIENT_SENSITIVITY`, `BOUNDARY_SENSITIVE`, or `PROVISIONAL_CAP_STABILITY`. These statuses are **diagnostics**, not physical confidence intervals. Small variation across this tested CAP family is necessary but insufficient for trustworthy asymptotic transmission: discretization, incoming-momentum spread, reflections before absorption and incomplete outgoing-wave separation remain systematic effects.
+
 ## Quantitative tunnelling benchmark
+
+### Convergence classification
+
+The tunnelling benchmark exports a `convergence` array grouped by incident energy and barrier width. It reports differences between successive grid/time refinements and assigns one of four honest statuses:
+
+- `UNRESOLVED_PACKET_OR_BUDGET`: interaction-region occupancy or probability accounting exceeds tolerance.
+- `INSUFFICIENT_REFINEMENT`: fewer than two discretizations.
+- `NOT_CONVERGED`: substantial change between the two finest numerical estimates.
+- `PROVISIONAL`: the quick checks pass, but no independent absorber-strength, barrier-grid or asymptotic flux validation is implied.
+
+**Caution:** refined grid spacing and timestep vary together. A small adjacent-grid difference is not sufficient to establish an asymptotic convergence order or accurate transmission.
+
+
 
 A new reproducible study compares **numerically propagated finite Gaussian wavepackets** with the **exact stationary transmission probability** for a rectangular barrier and with a **Gaussian-momentum-weighted transmission prediction**.
 
