@@ -1,0 +1,30 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Physinanigans · Quantum scattering</title><link rel="stylesheet" href="assets/app.css"><style>body{max-width:1100px;margin:auto;padding:24px;background:#0d1525;color:#ecf2fa;font-family:system-ui}a{color:#8cd5f8}.panel{background:#17263c;border:1px solid #405675;border-radius:14px;padding:18px;margin:20px 0}fieldset{border:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px;padding:0}label{display:block}input,select{width:100%;margin-top:9px}canvas{width:100%;height:400px;background:#0b1729;border-radius:10px}button{background:#22476f;border:1px solid #8cd5f8;color:white;border-radius:9px;padding:12px;cursor:pointer;margin-right:8px}output{color:#a3f7dc}small{color:#bbcbe0}#status{font-variant-numeric:tabular-nums;overflow-wrap:anywhere}</style></head><body>
+<nav><a href="index.html">← Universe Tunnel Lab</a> · <a href="wavepacket.html">Analytic free packet</a></nav>
+<header><p>EXPERIMENT 05 / NUMERICAL QUANTUM MECHANICS</p><h1>Quantum scattering & tunnelling</h1><p>Propagate a complex Gaussian wavefunction through a free region, a rectangular barrier or a potential well. The finite-difference Crank–Nicolson integrator is unitary to solver precision with a real, static potential and Dirichlet boundary conditions.</p></header>
+<div class="panel"><fieldset>
+<label for="potential">Potential<select id="potential"><option value="free">Free</option><option value="barrier" selected>Barrier</option><option value="well">Well</option><option value="double-barrier">Two barriers</option></select></label>
+<label for="height">Strength V₀ <output id="height-out">3</output><input id="height" type="range" min="0" max="8" step=".25" value="3"></label>
+<label for="width">Width / separation <output id="width-out">2</output><input id="width" type="range" min=".5" max="5" step=".25" value="2"></label>
+<label for="momentum">Initial k₀ <output id="momentum-out">2</output><input id="momentum" type="range" min=".5" max="4" step=".25" value="2"></label>
+<label for="sigma">Initial σ₀ <output id="sigma-out">1.5</output><input id="sigma" type="range" min=".6" max="3" step=".1" value="1.5"></label>
+</fieldset><p><button id="play" type="button">Start</button><button id="once" type="button">Step ×10</button><button id="reset" type="button">Reset packet</button></p><p id="status" role="status" aria-live="polite"></p></div>
+<div class="panel"><canvas id="plot" role="img" aria-label="Probability density and potential versus position"></canvas><p style="color:#8cf0d6">━━ Probability density |ψ|² <span style="color:#ffbd80;margin-left:20px">━━ Potential V(x), scaled</span></p><small>Coordinate domain x = −30…30; fixed zero-value wavefunction at both walls. The right/left readouts measure probability outside the central region, not asymptotic transmission/reflection coefficients. Stop before the packet reaches a wall.</small></div>
+<div class="panel"><h2>Model and limitations</h2><p><code>i∂ₜψ = [−(1/2m)∂ₓ² + V(x)]ψ</code>, with ℏ = m = 1. The tridiagonal Crank–Nicolson scheme advances an explicitly complex state using a centered discrete Laplacian.</p><p>Wavepacket tunnelling is indicated by amplitude on the far side of a barrier; a complete transmission measurement requires separating outgoing packets before boundary reflections. No absorbing boundary or relativistic effects are implemented. Discretization error remains even when norm is conserved.</p></div>
+<script src="schrodinger.js"></script><script>
+(()=>{'use strict';const $=id=>document.getElementById(id),c=$('plot'),ctx=c.getContext('2d');let simulation,playing=false,raf=null;
+function opts(){return {n:501,xmin:-30,xmax:30,dt:.025,mass:1,x0:-12,sigma0:+$('sigma').value,k0:+$('momentum').value,potentialType:$('potential').value,height:+$('height').value,width:+$('width').value};}
+function reset(){playing=false;cancelAnimationFrame(raf);$('play').textContent='Start';simulation=Schrodinger1D.create(opts());draw();}
+function draw(){const data=simulation.snapshot(),W=Math.max(300,c.clientWidth),H=400,ratio=window.devicePixelRatio||1;c.width=Math.round(W*ratio);c.height=Math.round(H*ratio);ctx.setTransform(ratio,0,0,ratio,0,0);ctx.clearRect(0,0,W,H);
+const p=32, y0=H-40, sx=x=>p+(x+30)/60*(W-2*p),sy=y=>y0-y*250;
+ctx.strokeStyle='#50617a';ctx.beginPath();ctx.moveTo(p,y0);ctx.lineTo(W-p,y0);ctx.stroke();
+for(const [vals,color,scale] of [[data.density,'#8cf0d6',1],[data.V,'#ffbd80',.055]]){ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();for(let i=0;i<data.x.length;i++){const X=sx(data.x[i]),Y=sy(vals[i]*scale);if(i===0)ctx.moveTo(X,Y);else ctx.lineTo(X,Y);}ctx.stroke();}
+ctx.fillStyle='#bfcde4';ctx.font='12px system-ui';for(const x of [-30,-20,-10,0,10,20,30])ctx.fillText(String(x),sx(x)-8,H-13);
+$('status').textContent='t = '+data.t.toFixed(2)+'  |  norm = '+data.norm.toFixed(8)+'  |  ⟨x⟩ = '+data.mean.toFixed(2)+'  |  left = '+data.left.toFixed(4)+'  |  right = '+data.right.toFixed(4);
+}
+function tick(){if(!playing)return;simulation.step(4);draw();if(simulation.snapshot().t<36)raf=requestAnimationFrame(tick);else{playing=false;$('play').textContent='Start';}}
+$('play').onclick=()=>{playing=!playing;$('play').textContent=playing?'Pause':'Start';if(playing)raf=requestAnimationFrame(tick);else cancelAnimationFrame(raf);};
+$('once').onclick=()=>{playing=false;cancelAnimationFrame(raf);$('play').textContent='Start';simulation.step(10);draw();};
+$('reset').onclick=reset;
+for(const id of ['potential','height','width','momentum','sigma'])$(id).addEventListener('input',()=>{for(const key of ['height','width','momentum','sigma'])$(key+'-out').textContent=$(key).value;reset();});
+window.addEventListener('resize',draw);reset();})();
+</script></body></html>

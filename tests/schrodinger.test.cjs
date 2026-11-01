@@ -1,0 +1,10 @@
+const {test}=require('node:test');
+const assert=require('node:assert/strict');
+const S=require('../schrodinger.js');
+const config={n:301,xmin:-30,xmax:30,dt:0.015,mass:1,x0:-10,sigma0:1.5,k0:2};
+test('initial discrete normalization and finite values',()=>{const p=S.create(config).snapshot();assert.ok(Math.abs(p.norm-1)<1e-12);assert.ok(p.density.every(Number.isFinite));});
+test('norm stays conserved through potential barrier',()=>{const s=S.create({...config,potentialType:'barrier',height:3,width:2});s.step(400);const p=s.snapshot();assert.ok(Math.abs(p.norm-1)<1e-8,p.norm);});
+test('norm stays conserved through well',()=>{const s=S.create({...config,potentialType:'well',height:2,width:3});s.step(250);assert.ok(Math.abs(s.snapshot().norm-1)<1e-8);});
+test('free packet group motion approximately follows analytic model',()=>{const s=S.create({...config,potentialType:'free'});s.step(160);const p=s.snapshot();const expected=config.x0+config.k0*p.t/config.mass;assert.ok(Math.abs(p.mean-expected)<0.18,`mean ${p.mean} expected ${expected}`);});
+test('Dirichlet edges remain zero',()=>{const s=S.create(config);s.step(60);const p=s.snapshot();assert.equal(p.density[0],0);assert.equal(p.density[p.density.length-1],0);});
+test('input validation',()=>{assert.throws(()=>S.create({...config,mass:0}),RangeError);assert.throws(()=>S.create({...config,potentialType:'invalid'}),RangeError);});

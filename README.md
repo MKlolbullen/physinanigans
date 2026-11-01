@@ -43,6 +43,16 @@ Open [**wavepacket.html**](wavepacket.html) to visualize the exact free-particle
 
 Run the two independent checks with `node --test tests/wavepacket.test.cjs` and `python3 -m unittest -v test_wavepacket`.
 
+## New: 1D quantum scattering (numerical)
+
+Open **[scattering.html](scattering.html)** for a numerical, interactive counterpart to the analytic [Gaussian packet](wavepacket.html). It evolves the time-dependent 1D Schrödinger equation with a *real time-independent potential* using a tridiagonal **Crank–Nicolson** integrator and complex arithmetic, with `ℏ = m = 1` in the UI.
+
+Try free propagation, a rectangular barrier, a well or two barriers. Controls set potential height/width, initial wave number and wavepacket width; plot probability density alongside the potential.
+
+**Interpretation:** density beyond a barrier is evidence of propagation into/through it but the instantaneous left/right probability readouts are **not** converged scattering coefficients. The computational interval has reflecting Dirichlet walls, so stop before boundary echoes return. Norm conservation is a check of the discrete unitary update, not a proof of continuum accuracy. There are no absorbing boundary conditions or multi-particle effects.
+
+Run `node --test tests/schrodinger.test.cjs` to verify normalization, approximate free-packet group velocity, boundary behavior and input validation.
+
 ## Three experiments worth trying
 
 1. **Same probabilities, different states.** In the quantum lab, compare the entangled and unentangled 50/50 initial states. Both show equal local excitation probabilities. Only one has nonzero concurrence. Add dephasing to watch that distinction fade.
