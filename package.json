@@ -6,10 +6,11 @@
   "scripts": {
     "build": "python3 build.py && node scripts/render-math.cjs",
     "start": "python3 -m http.server 8000",
-    "test": "node --test tests/relativity.test.cjs && node test_browser.cjs && node test_cosmology_browser.cjs && node --test tests/wavepacket.test.cjs && node --test tests/schrodinger.test.cjs && node --test tests/scattering-validation.test.cjs && node --test tests/barrier-theory.test.cjs && node --test tests/tunnelling-convergence.test.cjs",
+    "test": "node --test tests/relativity.test.cjs && node test_browser.cjs && node test_cosmology_browser.cjs && node --test tests/wavepacket.test.cjs && node --test tests/schrodinger.test.cjs && node --test tests/scattering-validation.test.cjs && node --test tests/barrier-theory.test.cjs && node --test tests/tunnelling-convergence.test.cjs && node --test tests/cap-sensitivity.test.cjs",
     "test:physics": "python3 -m unittest -v test_model test_cosmology test_wavepacket",
     "test:ui": "node tests/browser.cjs",
-    "bench:tunnelling": "node scripts/tunnelling-benchmark.cjs --quick"
+    "bench:tunnelling": "node scripts/tunnelling-benchmark.cjs --quick",
+    "bench:cap": "node scripts/cap-sensitivity.cjs --quick"
   },
   "devDependencies": {
     "katex": "0.18.2",
